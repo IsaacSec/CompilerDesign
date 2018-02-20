@@ -5,19 +5,25 @@ float j;
 
 {
 
- /* Multi-line
-  *
-  * comment
-  */
+  /* Multi-line
+    *
+    * comment
+    */
 
- j := 10.0;
- i := 0;
+  j := 10.0;
+  i := 0;
+
+  if (j = 0) then {
+
+  } else {
+
+  }
 
   while (i < 10) do {
-     j := j - 1.1;
+    j := j - 1.1;
 
-     /* Will flag an error below */
-     i := i++;
+    /* Will flag an error below */
+    i := i++;
   }
 
 }

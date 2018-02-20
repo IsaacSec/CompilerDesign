@@ -7,4 +7,4 @@ syntactic.tab.c: syntactic.y
 run: analyzer.o test01.c
 	./analyzer.o < test01.c
 clean:
-	rm *.o lex*.c syntactic.tab.*
+	rm *.o lex*.c syntactic.tab.* syntactic.output
