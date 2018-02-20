@@ -159,12 +159,19 @@
         } 
     }
 [1-9][0-9]*|0(c|C)[0-7]+|0(x|X)[0-9A-Fa-f]+|[0-9]*"."[0-9]+([eE][-+]?[0-9]+)?  { 
+
         return FLOAT_NUM;
     }
 [0-9]+                     {
+        
+            yylval.dval = atoi(yytext);
+        
         return INT_NUM;
     }                     
 [A-Za-z_][A-Za-z0-9_]*          {
+        
+            yylval.symp = symlook(yytext);
+        
         return ID; 
     }
 [^ ]                            { errorFound(); }

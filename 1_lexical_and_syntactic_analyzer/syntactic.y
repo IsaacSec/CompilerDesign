@@ -18,9 +18,14 @@
     void yyerror (char *string);
 %}
 
-%token ID
+%union {
+  int dval;
+  struct _sym_entry *symp;
+}
+
+%token <symp> ID
 %token SEMI
-%token INTEGER
+%token <dval> INTEGER
 %token FLOAT
 %token IF
 %token THEN
@@ -121,6 +126,7 @@ void yyerror (char *msg){
 guint hash_func (gconstpointer key) {
     string key_str = (string) key;
     gconstpointer str = key_str;   // Redundant with previus line
+    
     return g_str_hash(str);
 }
 
@@ -155,6 +161,21 @@ void value_destroy_fun (gpointer data){
     }
 }
 
+
+void print_hash_table (GHashTable * table){
+    //g_hash_table_foreach(table, print_hash_table_entry, NULL);
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init (&iter, table);
+    
+    printf("+------------------------------+\n");
+
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+        sym_entry * entry = (sym_entry*) value;
+        printf("%s %s %s %ld\n",(string)key, entry->identifier, entry->type, entry->value);
+    }
+}
+
 /* Function to manage symbol table */
 sym_entry * symlook (string s) {
 
@@ -166,10 +187,12 @@ sym_entry * symlook (string s) {
             value_destroy_fun);
     }
 
-    gpointer gp = (gpointer) s;
+    gpointer gp = s;
     
-    if (g_hash_table_contains(symtable, gp) == FALSE) {
+    if (g_hash_table_contains(symtable, gp) == TRUE) {
+        //printf("Duplicated\n");
         return g_hash_table_lookup (symtable, gp);
+    
     } else {
         sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
         entry->identifier = strdup(s);
@@ -177,7 +200,8 @@ sym_entry * symlook (string s) {
         entry->value = 0;
 
         // We duplicate s instead of using entry->identifier as a key to avoid double free
-        if (g_hash_table_insert(symtable, strdup(s), entry)) {
+        if (g_hash_table_insert(symtable, strdup(s), entry) == TRUE) {
+            //printf("Inserted\n");
             return entry;
         } else {
             return NULL;
@@ -193,6 +217,14 @@ int main (){
     printf("|      by { Martin and Isaac }     |\n");
     printf("+----------------------------------+\n\n");
 
+    symtable = g_hash_table_new_full(
+            hash_func,
+            key_equal_func,
+            key_destroy_func,
+            value_destroy_fun);
+
     yyparse();
+
+    print_hash_table(symtable);
     return 0;
 }
