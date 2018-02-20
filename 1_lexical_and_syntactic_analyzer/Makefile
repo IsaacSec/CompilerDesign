@@ -1,10 +1,26 @@
-analyzer.o: lex.yy.c syntactic.tab.c
-	gcc syntactic.tab.c lex.yy.c -o analyzer.o -lfl -Wall -DGRAMMAR
-lex.yy.c: lexical.l syntactic.tab.c
-	flex lexical.l
-syntactic.tab.c: syntactic.y 
-	bison -d syntactic.y -v
-run: analyzer.o test01.c
-	./analyzer.o < test01.c
+GLIB='pkg-config --cflags --libs glib-2.0'
+CC=gcc
+FLEX=flex
+BISON=bison
+EXECUTABLE=analyzer.o
+SOURCES=syntactic.tab.c lex.yy.c
+BISON_FLAGS=-d -v
+#FLEX_FLAGS=
+CC_FLAGS=-DGRAMMAR -lfl -Wall
+B_SRC=syntactic.y
+B_OUT=syntactic.tab.c
+L_SRC=lexical.l
+L_OUT=lex.yy.c
+INPUT_FILE=test01.c
+TRASH_FILES=*.o lex*.c syntactic.tab.* syntactic.output
+
+$(EXECUTABLE): $(SOURCES)
+	$(CC) $(SOURCES) -o $(EXECUTABLE) $(CC_FLAGS)
+$(L_OUT): $(L_SRC) $(B_OUT)
+	$(FLEX) $(L_SRC)
+$(B_OUT): $(B_S) 
+	$(BISON) $(B_SRC) $(BISON_FLAGS)
+run: $(EXECUTABLE) $(INPUT_FILE)
+	./$(EXECUTABLE) < $(INPUT_FILE)
 clean:
-	rm *.o lex*.c syntactic.tab.* syntactic.output
+	rm $(TRASH_FILES)
