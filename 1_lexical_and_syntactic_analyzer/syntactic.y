@@ -36,6 +36,12 @@
 /* This solves the dangling else problem */
 %nonassoc THEN
 %nonassoc ELSE
+
+ /* To avoid ambiguities in the grammar assign associativity */
+ /* and preference on the operators */
+ 
+%nonassoc UMINUS
+
 /*  */
 %%
 
@@ -75,11 +81,11 @@ exp: simple_exp LT simple_exp
     ;
 
 simple_exp: simple_exp PLUS term
-    |   simple_exp MINUS term
+    |   simple_exp MINUS term %prec UMINUS
     |   term
     ;
 
-term: term TIMES factor
+term: term TIMES factor 
     |   term DIV factor
     |   factor
     ;

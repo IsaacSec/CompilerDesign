@@ -151,7 +151,6 @@
 "+"|"-"|"*"|"/"                 { 
         char * value = getSubstring(yytext, yyleng);
         char cval = *value;
-
         switch(cval){
             case '+': return PLUS;
             case '-': return MINUS;
@@ -159,10 +158,10 @@
             case '/': return DIV;
         } 
     }
-[1-9][0-9]*|0(c|C)[0-7]+|0(x|X)[0-9A-Fa-f]+|[+-]?[0-9]*"."[0-9]+([eE][-+]?[0-9]+)?  { 
+[1-9][0-9]*|0(c|C)[0-7]+|0(x|X)[0-9A-Fa-f]+|[0-9]*"."[0-9]+([eE][-+]?[0-9]+)?  { 
         return FLOAT_NUM;
     }
-[-+]?[0-9]*                     {
+[0-9]+                     {
         return INT_NUM;
     }                     
 [A-Za-z_][A-Za-z0-9_]*          {

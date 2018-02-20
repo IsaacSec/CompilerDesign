@@ -68,7 +68,8 @@ extern int yydebug;
     TIMES = 278,
     DIV = 279,
     INT_NUM = 280,
-    FLOAT_NUM = 281
+    FLOAT_NUM = 281,
+    UMINUS = 282
   };
 #endif
 
