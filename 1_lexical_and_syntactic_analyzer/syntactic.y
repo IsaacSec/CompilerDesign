@@ -1,9 +1,19 @@
 %{
     #include <string.h>
     #include <stdio.h>
+    #include <glib.h>
+    #include "table.h"
+
+    /* TYPES */
+    const string _FLOAT = "float";
+    const string _INT = "integer";
+    const string _UNDEF = "undefined";
+
+    GHashTable * symtable;
     
     int yylineno;
     char * yytext;
+    
     /* Function definitions */
     void yyerror (char *string);
 %}
@@ -103,11 +113,86 @@ variable: ID
 
 /* Bison does NOT implement yyerror, so define it here */
 void yyerror (char *msg){
-  printf("%d: %s near token '%s'\n", yylineno, msg, yytext);
+    printf("%d: %s near token '%s'\n", yylineno, msg, yytext);
+}
+
+/* GLib Hash functions */
+
+guint hash_func (gconstpointer key) {
+    string key_str = (string) key;
+    gconstpointer str = key_str;   // Redundant with previus line
+    return g_str_hash(str);
+}
+
+gboolean key_equal_func (gconstpointer a, gconstpointer b) {
+    string key_a = (string) a;
+    string key_b = (string) b;
+
+    if (strcmp(key_a, key_b) == 0) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
+void key_destroy_func (gpointer data){
+    free(data);
+}
+
+void value_destroy_fun (gpointer data){
+    
+    if (data != NULL) {
+        sym_entry * entry = (sym_entry*) data;
+        
+        if (entry->identifier != NULL) {
+            free(entry->identifier);
+        }
+        
+        // We cannot free the type because it is a EXPLICIT STRING
+        entry->type = NULL; 
+
+        free(entry); //Check
+    }
+}
+
+/* Function to manage symbol table */
+sym_entry * symlook (string s) {
+
+    if (symtable == NULL) {
+        symtable = g_hash_table_new_full(
+            hash_func,
+            key_equal_func,
+            key_destroy_func,
+            value_destroy_fun);
+    }
+
+    gpointer gp = (gpointer) s;
+    
+    if (g_hash_table_contains(symtable, gp) == FALSE) {
+        return g_hash_table_lookup (symtable, gp);
+    } else {
+        sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
+        entry->identifier = strdup(s);
+        entry->type = _UNDEF;
+        entry->value = 0;
+
+        // We duplicate s instead of using entry->identifier as a key to avoid double free
+        if (g_hash_table_insert(symtable, strdup(s), entry)) {
+            return entry;
+        } else {
+            return NULL;
+        }
+    }   
 }
 
 /* Bison does NOT define the main entry point so define it here */
 int main (){
-  yyparse();
-  return 0;
+    
+    printf("+----------------------------------+\n");
+    printf("|  Lexical and Syntantic analyzer  |\n");
+    printf("|      by { Martin and Isaac }     |\n");
+    printf("+----------------------------------+\n\n");
+
+    yyparse();
+    return 0;
 }

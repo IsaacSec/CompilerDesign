@@ -1,4 +1,5 @@
-GLIB='pkg-config --cflags --libs glib-2.0'
+#`pkg-config --cflags --libs glib-2.0`
+GLIB=-I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -lglib-2.0
 CC=gcc
 FLEX=flex
 BISON=bison
@@ -15,7 +16,7 @@ INPUT_FILE=test01.c
 TRASH_FILES=*.o lex*.c syntactic.tab.* syntactic.output
 
 $(EXECUTABLE): $(SOURCES)
-	$(CC) $(SOURCES) -o $(EXECUTABLE) $(CC_FLAGS)
+	$(CC) $(SOURCES) -o $(EXECUTABLE) $(GLIB) $(CC_FLAGS)
 $(L_OUT): $(L_SRC) $(B_OUT)
 	$(FLEX) $(L_SRC)
 $(B_OUT): $(B_S) 
