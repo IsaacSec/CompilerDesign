@@ -23,9 +23,9 @@
   struct _sym_entry *symp;
 }
 
-%token <symp> ID
+%token ID
 %token SEMI
-%token <dval> INTEGER
+%token INTEGER
 %token FLOAT
 %token IF
 %token THEN
@@ -67,7 +67,7 @@ var_dec: var_dec single_dec
     |
     ;
 
-single_dec: type ID SEMI
+single_dec: type ID SEMI    
     ;
 
 type: INTEGER
@@ -124,10 +124,8 @@ void yyerror (char *msg){
 /* GLib Hash functions */
 
 guint hash_func (gconstpointer key) {
-    string key_str = (string) key;
-    gconstpointer str = key_str;   // Redundant with previus line
-    
-    return g_str_hash(str);
+    // Our hash function is literally the hash of the key string
+    return g_str_hash((string) key);
 }
 
 gboolean key_equal_func (gconstpointer a, gconstpointer b) {
@@ -141,10 +139,14 @@ gboolean key_equal_func (gconstpointer a, gconstpointer b) {
     }
 }
 
+
+
+// Not tested beacause at this point we dont need to remove any item
 void key_destroy_func (gpointer data){
     free(data);
 }
 
+// Not tested beacause at this point we dont need to remove any item
 void value_destroy_fun (gpointer data){
     
     if (data != NULL) {
@@ -163,22 +165,31 @@ void value_destroy_fun (gpointer data){
 
 
 void print_hash_table (GHashTable * table){
-    //g_hash_table_foreach(table, print_hash_table_entry, NULL);
+
     GHashTableIter iter;
     gpointer key, value;
     g_hash_table_iter_init (&iter, table);
     
-    printf("+------------------------------+\n");
+    printf("\n+------------------------------------------------------+\n");
+    printf("|                  Symbol Hash Table                   |\n");
+    printf("+---------+------------+----------------+--------------+\n");
+    printf("|   KEY   | identifier |      type      |     value    |\n");
+    printf("+---------+------------+----------------+--------------+\n");
 
+    // Iterate hash table to print every item
     while (g_hash_table_iter_next (&iter, &key, &value)) {
         sym_entry * entry = (sym_entry*) value;
-        printf("%s %s %s %ld\n",(string)key, entry->identifier, entry->type, entry->value);
+        printf("| %7s | %10s | %14s | %12ld |\n",(string)key, entry->identifier, entry->type, entry->value);
     }
+
+    printf("+---------+------------+----------------+--------------+\n");
 }
 
 /* Function to manage symbol table */
 sym_entry * symlook (string s) {
 
+
+    // Tha table hasnt been created
     if (symtable == NULL) {
         symtable = g_hash_table_new_full(
             hash_func,
@@ -189,11 +200,13 @@ sym_entry * symlook (string s) {
 
     gpointer gp = s;
     
+    // Search the key in the hash table
     if (g_hash_table_contains(symtable, gp) == TRUE) {
-        //printf("Duplicated\n");
+
         return g_hash_table_lookup (symtable, gp);
     
     } else {
+        // Create a new symbol entry
         sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
         entry->identifier = strdup(s);
         entry->type = _UNDEF;
@@ -201,7 +214,6 @@ sym_entry * symlook (string s) {
 
         // We duplicate s instead of using entry->identifier as a key to avoid double free
         if (g_hash_table_insert(symtable, strdup(s), entry) == TRUE) {
-            //printf("Inserted\n");
             return entry;
         } else {
             return NULL;
@@ -212,11 +224,12 @@ sym_entry * symlook (string s) {
 /* Bison does NOT define the main entry point so define it here */
 int main (){
     
-    printf("+----------------------------------+\n");
+    printf("\n+----------------------------------+\n");
     printf("|  Lexical and Syntantic analyzer  |\n");
     printf("|      by { Martin and Isaac }     |\n");
     printf("+----------------------------------+\n\n");
 
+    // Just in case :D
     symtable = g_hash_table_new_full(
             hash_func,
             key_equal_func,

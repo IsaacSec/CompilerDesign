@@ -1,11 +1,12 @@
 ## Syntactic Analyzer for tinyC
 
-**IMPORTANT:** If you are using MacOS, change the flag -lfl with -ll in the Makefile
+**IMPORTANT:** If you are using MacOS, change the flag -lfl in CC_FLAGS with -ll  (Makefile)
 
 # Requirements
  - gcc
  - flex/lex
  - bison
+ - glib-2.0
 
 ### Compile
 
