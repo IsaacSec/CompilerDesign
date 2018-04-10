@@ -19,14 +19,15 @@
 %}
 
 %union {
-  int dval;
+  int ival;
+  float fval;
   struct _sym_entry *symp;
 }
 
-%token ID
+%token <symp> ID 
 %token SEMI
-%token INTEGER
-%token FLOAT
+%token <symp> INTEGER
+%token <symp> FLOAT
 %token IF
 %token THEN
 %token ELSE
@@ -45,8 +46,8 @@
 %token MINUS
 %token TIMES
 %token DIV
-%token INT_NUM
-%token FLOAT_NUM
+%token <ival> INT_NUM
+%token <fval> FLOAT_NUM
 
 /* This solves the dangling else problem */
 %nonassoc THEN
@@ -58,20 +59,31 @@
 %nonassoc UMINUS
 
 /*  */
+
+%type <symp> var_dec
+%type <symp> single_dec
+%type <symp> type
+%type <symp> variable
+
 %%
 
 program: var_dec stmt_seq   { printf ("No errors in the code\n");}
     ;
 
-var_dec: var_dec single_dec
+var_dec: var_dec single_dec { 
+                                $$ = $2; 
+                            }
     |
     ;
 
-single_dec: type ID SEMI    
+single_dec: type variable SEMI {
+                            // $$ = symlook($2->identifier);
+                            printf("hellou there....\n");
+                         }   
     ;
 
-type: INTEGER
-    |   FLOAT
+type: INTEGER   { $$->type = _INT;   }
+    |   FLOAT   { $$->type = _FLOAT; }
     ;
 
 stmt_seq: stmt_seq stmt 
@@ -111,7 +123,10 @@ factor: LPAREN exp RPAREN
     |   variable
     ;
     
-variable: ID
+variable: ID { 
+                // $$->identifier = $1->identifier;
+                printf("hellou there V2.0! ");
+             }
     ;
 
 %%
@@ -226,7 +241,7 @@ int main (){
     
     printf("\n+----------------------------------+\n");
     printf("|  Lexical and Syntantic analyzer  |\n");
-    printf("|      by { Martin and Isaac }     |\n");
+    printf("|      by { Martin and Isaac... }     |\n");
     printf("+----------------------------------+\n\n");
 
     // Just in case :D
