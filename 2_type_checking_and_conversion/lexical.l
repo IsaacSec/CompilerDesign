@@ -3,6 +3,7 @@
     #include <string.h>
     /* References from bison (TOKENS) */
     #include "syntactic.tab.h"
+    #include "table.h"
 
     /* Error handling variables to access with bison */
     char * yytext;
@@ -158,7 +159,7 @@
             case '/': return DIV;
         } 
     }
-[1-9][0-9]*|0(c|C)[0-7]+|0(x|X)[0-9A-Fa-f]+|[0-9]*"."[0-9]+([eE][-+]?[0-9]+)?  { 
+[0-9]*"."[0-9]+([eE][-+]?[0-9]+)?  { 
         
         yylval.fval = atoi(yytext);
         return FLOAT_NUM;
@@ -171,8 +172,8 @@
     }                     
 [A-Za-z_][A-Za-z0-9_]*          {
         
-            yylval.symp = symlook(yytext);
-        
+            sym_entry * newsym = symlook(yytext);
+            yylval.symp = newsym;  
         return ID; 
     }
 [^ ]                            { errorFound(); }

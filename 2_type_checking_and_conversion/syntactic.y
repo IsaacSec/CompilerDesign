@@ -21,13 +21,14 @@
 %union {
   int ival;
   float fval;
+  char * name;
   struct _sym_entry *symp;
 }
 
 %token <symp> ID 
 %token SEMI
-%token <symp> INTEGER
-%token <symp> FLOAT
+%token <string> INTEGER
+%token <string> FLOAT
 %token IF
 %token THEN
 %token ELSE
@@ -62,8 +63,15 @@
 
 %type <symp> var_dec
 %type <symp> single_dec
-%type <symp> type
+%type <name> type
 %type <symp> variable
+%type <symp> factor
+%type <symp> term
+%type <symp> exp
+%type <symp> simple_exp
+%type <symp> stmt_seq
+%type <symp> stmt
+%type <symp>block
 
 %%
 
@@ -76,14 +84,14 @@ var_dec: var_dec single_dec {
     |
     ;
 
-single_dec: type variable SEMI {
-                            // $$ = symlook($2->identifier);
-                            printf("hellou there....\n");
-                         }   
+single_dec: type ID SEMI    {
+                                $$ = $2;
+                                $$->type = $1;
+                            }   
     ;
 
-type: INTEGER   { $$->type = _INT;   }
-    |   FLOAT   { $$->type = _FLOAT; }
+type: INTEGER   { $$ = _INT; }
+    |   FLOAT   { $$ = _FLOAT; }
     ;
 
 stmt_seq: stmt_seq stmt 
@@ -93,7 +101,17 @@ stmt_seq: stmt_seq stmt
 stmt: IF exp THEN stmt ELSE stmt
     |   IF exp THEN stmt
     |   WHILE exp DO stmt
-    |   variable ASSIGN exp SEMI
+    |   variable ASSIGN exp SEMI            {
+                                                if ($1->type == _UNDEF || $3->type == _UNDEF){
+                                                        syntantic_error("one or both terms is undefined\n");
+                                                } else {
+                                                    if ($1->type == $3->type) {
+                                                        $$ = $1;
+                                                    } else {
+                                                        syntantic_warning("not the same type\n");
+                                                    }
+                                                }   
+                                            }
     |   READ LPAREN variable RPAREN SEMI
     |   WRITE LPAREN exp RPAREN SEMI
     |   block
@@ -102,31 +120,89 @@ stmt: IF exp THEN stmt ELSE stmt
 block: LBRACE stmt_seq RBRACE
     ;
 
-exp: simple_exp LT simple_exp
-    |   simple_exp EQ simple_exp
-    |   simple_exp
+exp: simple_exp LT simple_exp       { 
+                                        if ($1->type == _UNDEF || $3->type == _UNDEF){
+                                            syntantic_error("one or both terms is undefined\n");
+                                        } else {
+                                            if ($1->type == $3->type) {
+                                                $$ = create_temp_entry($1->type);
+                                            } else {
+                                                $$ = create_temp_entry(_FLOAT);
+                                            }
+                                        }   
+                                    }
+    |   simple_exp EQ simple_exp    {
+                                        if ($1->type == _UNDEF || $3->type == _UNDEF){
+                                            syntantic_error("one or both terms is undefined\n");
+                                        } else {
+                                            if ($1->type == $3->type) {
+                                                $$ = create_temp_entry($1->type);
+                                            } else {
+                                                $$ = create_temp_entry(_FLOAT);
+                                            }
+                                        }   
+                                    }
+    |   simple_exp                  { $$ = $1; }
     ;
 
-simple_exp: simple_exp PLUS term
-    |   simple_exp MINUS term %prec UMINUS
-    |   term
+simple_exp: simple_exp PLUS term                {
+                                                    if ($1->type == _UNDEF || $3->type == _UNDEF){
+                                                        syntantic_error("one or both terms is undefined\n");
+                                                    } else {
+                                                        if ($1->type == $3->type) {
+                                                            $$ = create_temp_entry($1->type);
+                                                        } else {
+                                                            $$ = create_temp_entry(_FLOAT);
+                                                        }
+                                                    }   
+                                                }
+    |   simple_exp MINUS term %prec UMINUS      { 
+                                                    if ($1->type == _UNDEF || $3->type == _UNDEF){
+                                                        syntantic_error("one or both terms is undefined\n");
+                                                    } else {
+                                                        if ($1->type == $3->type) {
+                                                            $$ = create_temp_entry($1->type);
+                                                        } else {
+                                                            $$ = create_temp_entry(_FLOAT);
+                                                        }
+                                                    }              
+                                                }
+    |   term                                    { $$ = $1; }    
     ;
 
-term: term TIMES factor 
-    |   term DIV factor
-    |   factor
+term: term TIMES factor     {
+                                if ($1->type == _UNDEF || $3->type == _UNDEF){
+                                    syntantic_error("one or both terms is undefined\n");
+                                } else {
+                                    if ($1->type == $3->type) {
+                                        
+                                        $$ = create_temp_entry($1->type);
+                                    } else {
+                                        $$ = create_temp_entry(_FLOAT);
+                                    }
+                                }
+                            }
+    |   term DIV factor     {   
+                                if ($1->type == _UNDEF || $3->type == _UNDEF){
+                                    syntantic_error("one or both terms is undefined\n");
+                                } else {
+                                    if ($1->type == $3->type) {
+                                        $$ = create_temp_entry($1->type);
+                                    } else {
+                                        $$ = create_temp_entry(_FLOAT);
+                                    }
+                                }
+                            }    
+    |   factor              { $$ = $1; }
     ;
 
-factor: LPAREN exp RPAREN
-    |   INT_NUM
-    |   FLOAT_NUM
-    |   variable
+factor: LPAREN exp RPAREN       { $$ = $2; }
+    |   INT_NUM                 { $$ = create_temp_entry(_INT); }    
+    |   FLOAT_NUM               { $$ = create_temp_entry(_FLOAT); }
+    |   variable                { $$ = $1; }
     ;
     
-variable: ID { 
-                // $$->identifier = $1->identifier;
-                printf("hellou there V2.0! ");
-             }
+variable: ID { $$ = $1; }
     ;
 
 %%
@@ -136,6 +212,13 @@ void yyerror (char *msg){
     printf("%d: %s near token '%s'\n", yylineno, msg, yytext);
 }
 
+void syntantic_warning(string message){
+    printf("Warning (line:%d): %s",yylineno,message);
+}
+
+void syntantic_error(string message){
+    printf("Error: (line:%d)%s",yylineno,message);
+}
 /* GLib Hash functions */
 
 guint hash_func (gconstpointer key) {
@@ -200,6 +283,15 @@ void print_hash_table (GHashTable * table){
     printf("+---------+------------+----------------+--------------+\n");
 }
 
+
+sym_entry * create_temp_entry(string type){
+    sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
+    entry->type = type;
+    entry->value = 0;
+    
+    return entry;
+}
+
 /* Function to manage symbol table */
 sym_entry * symlook (string s) {
 
@@ -236,12 +328,16 @@ sym_entry * symlook (string s) {
     }   
 }
 
+void print_sym_entry(sym_entry * symp){
+    printf("%s %s\n",symp->identifier,symp->type);
+}
+
 /* Bison does NOT define the main entry point so define it here */
 int main (){
     
     printf("\n+----------------------------------+\n");
     printf("|  Lexical and Syntantic analyzer  |\n");
-    printf("|      by { Martin and Isaac... }     |\n");
+    printf("|      by { Martin and Isaac }     |\n");
     printf("+----------------------------------+\n\n");
 
     // Just in case :D
