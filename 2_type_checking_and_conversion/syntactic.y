@@ -2,12 +2,16 @@
     #include <string.h>
     #include <stdio.h>
     #include <glib.h>
+    #include <stdbool.h>
     #include "table.h"
 
     /* TYPES */
     const string _FLOAT = "float";
     const string _INT = "integer";
     const string _UNDEF = "undefined";
+    const string _BOOL = "boolean";
+    const string _ERROR = "error";
+    const string _EMPTY = "empty";
 
     GHashTable * symtable;
     
@@ -71,22 +75,28 @@
 %type <symp> simple_exp
 %type <symp> stmt_seq
 %type <symp> stmt
-%type <symp>block
+%type <symp> block
 
 %%
 
-program: var_dec stmt_seq   { printf ("No errors in the code\n");}
+program: var_dec stmt_seq   {
+                                if ($1->type == _ERROR || $2->type == _ERROR){
+                                    printf ("Semantic error:\n");
+                                } else {
+                                    printf ("No errors found\n");
+                                } 
+                            }
     ;
 
 var_dec: var_dec single_dec { 
                                 $$ = $2; 
                             }
-    |
+    |                       {   $$ = create_temp_entry(_EMPTY);}
     ;
 
 single_dec: type ID SEMI    {
-                                $$ = $2;
-                                $$->type = $1;
+                                $$ = create_temp_entry(_EMPTY);
+                                $2->type = $1;
                             }   
     ;
 
@@ -94,103 +104,111 @@ type: INTEGER   { $$ = _INT; }
     |   FLOAT   { $$ = _FLOAT; }
     ;
 
-stmt_seq: stmt_seq stmt 
-    |
+stmt_seq: stmt_seq stmt         {
+                                    if ($1->type == _EMPTY){
+                                        $$ = create_temp_entry(_EMPTY);
+                                        // Continue
+                                    } else {
+                                        $$ = create_temp_entry(_ERROR);
+                                    }
+                                }
+    |                           {   $$ = create_temp_entry(_EMPTY);}
     ;
 
-stmt: IF exp THEN stmt ELSE stmt
-    |   IF exp THEN stmt
-    |   WHILE exp DO stmt
-    |   variable ASSIGN exp SEMI            {
-                                                if ($1->type == _UNDEF || $3->type == _UNDEF){
-                                                        syntantic_error("one or both terms is undefined\n");
-                                                } else {
-                                                    if ($1->type == $3->type) {
-                                                        $$ = $1;
+stmt: IF exp THEN stmt ELSE stmt            {   
+                                                if ($2->type == _BOOL){
+                                                    if ($4->type == _EMPTY && $6->type == _EMPTY){
+                                                        $$ = create_temp_entry(_EMPTY);
                                                     } else {
-                                                        syntantic_warning("not the same type\n");
+                                                        $$ = create_temp_entry(_ERROR);
                                                     }
-                                                }   
+                                                } else {
+                                                    $$ = create_temp_entry(_ERROR);
+                                                }
                                             }
-    |   READ LPAREN variable RPAREN SEMI
-    |   WRITE LPAREN exp RPAREN SEMI
-    |   block
+    |   IF exp THEN stmt                    {
+                                                if ($2->type == _BOOL){
+                                                    $$ = create_temp_entry(_EMPTY);
+                                                    // Continue
+                                                } else {
+                                                    $$ = create_temp_entry(_ERROR); 
+                                                }
+                                            }
+    |   WHILE exp DO stmt                   {   
+                                                if ($2->type == _BOOL){
+                                                    $$ = create_temp_entry(_EMPTY);
+                                                    // Continue
+                                                } else {
+                                                    $$ = create_temp_entry(_ERROR); 
+                                                }
+                                            }
+    |   variable ASSIGN exp SEMI            {
+                                                if (type_checking_assign($$,$1,$3)) {
+                                                    $$ = create_temp_entry(_EMPTY);
+                                                    // Continue
+                                                } else {
+                                                    $$ = create_temp_entry(_ERROR); 
+                                                } 
+                                            }
+    |   READ LPAREN variable RPAREN SEMI    {
+                                                if ($3->type == _FLOAT || $3->type == _INT) {
+                                                    $$ = create_temp_entry(_EMPTY);
+                                                    // Continue;
+                                                } else {
+                                                    $$ = create_temp_entry(_ERROR); 
+                                                    syntantic_error("The variable must be an Integer or Float type\n");
+                                                }
+                                            }
+    |   WRITE LPAREN exp RPAREN SEMI        {
+                                                if ($3->type == _FLOAT || $3->type == _INT) {
+                                                    $$ = create_temp_entry(_EMPTY);
+                                                    // Continue;
+                                                } else {
+                                                    $$ = create_temp_entry(_ERROR); 
+                                                    syntantic_error("The variable must be an Integer or Float type\n");
+                                                }
+                                            }
+    |   block                               { $$ = $1; }
     ;
 
-block: LBRACE stmt_seq RBRACE
+block: LBRACE stmt_seq RBRACE       { $$ = $2;}
     ;
 
 exp: simple_exp LT simple_exp       { 
-                                        if ($1->type == _UNDEF || $3->type == _UNDEF){
-                                            syntantic_error("one or both terms is undefined\n");
-                                        } else {
-                                            if ($1->type == $3->type) {
-                                                $$ = create_temp_entry($1->type);
-                                            } else {
-                                                $$ = create_temp_entry(_FLOAT);
-                                            }
-                                        }   
+                                        if (type_checking_relop($$,$1,$3)) {
+                                            
+                                            // Continue
+                                        }      
                                     }
-    |   simple_exp EQ simple_exp    {
-                                        if ($1->type == _UNDEF || $3->type == _UNDEF){
-                                            syntantic_error("one or both terms is undefined\n");
-                                        } else {
-                                            if ($1->type == $3->type) {
-                                                $$ = create_temp_entry($1->type);
-                                            } else {
-                                                $$ = create_temp_entry(_FLOAT);
-                                            }
-                                        }   
+    |   simple_exp EQ simple_exp    {   // Note ---- Check boolean type
+                                        if (type_checking_relop($$,$1,$3)) {
+                                            // Continue
+                                        }
                                     }
     |   simple_exp                  { $$ = $1; }
     ;
 
 simple_exp: simple_exp PLUS term                {
-                                                    if ($1->type == _UNDEF || $3->type == _UNDEF){
-                                                        syntantic_error("one or both terms is undefined\n");
-                                                    } else {
-                                                        if ($1->type == $3->type) {
-                                                            $$ = create_temp_entry($1->type);
-                                                        } else {
-                                                            $$ = create_temp_entry(_FLOAT);
-                                                        }
-                                                    }   
+                                                    if (type_checking_op($$,$1,$3)) {
+                                                        // Continue
+                                                    }
                                                 }
     |   simple_exp MINUS term %prec UMINUS      { 
-                                                    if ($1->type == _UNDEF || $3->type == _UNDEF){
-                                                        syntantic_error("one or both terms is undefined\n");
-                                                    } else {
-                                                        if ($1->type == $3->type) {
-                                                            $$ = create_temp_entry($1->type);
-                                                        } else {
-                                                            $$ = create_temp_entry(_FLOAT);
-                                                        }
-                                                    }              
+                                                    if (type_checking_op($$,$1,$3)) {
+                                                        // Continue
+                                                    }        
                                                 }
     |   term                                    { $$ = $1; }    
     ;
 
-term: term TIMES factor     {
-                                if ($1->type == _UNDEF || $3->type == _UNDEF){
-                                    syntantic_error("one or both terms is undefined\n");
-                                } else {
-                                    if ($1->type == $3->type) {
-                                        
-                                        $$ = create_temp_entry($1->type);
-                                    } else {
-                                        $$ = create_temp_entry(_FLOAT);
-                                    }
+term: term TIMES factor     {   
+                                if (type_checking_op($$,$1,$3)) {
+                                    // Continue
                                 }
                             }
     |   term DIV factor     {   
-                                if ($1->type == _UNDEF || $3->type == _UNDEF){
-                                    syntantic_error("one or both terms is undefined\n");
-                                } else {
-                                    if ($1->type == $3->type) {
-                                        $$ = create_temp_entry($1->type);
-                                    } else {
-                                        $$ = create_temp_entry(_FLOAT);
-                                    }
+                                if (type_checking_op($$,$1,$3)) {
+                                    // Continue
                                 }
                             }    
     |   factor              { $$ = $1; }
@@ -217,8 +235,84 @@ void syntantic_warning(string message){
 }
 
 void syntantic_error(string message){
-    printf("Error: (line:%d)%s",yylineno,message);
+    printf("Error: (line:%d): %s",yylineno,message);
 }
+
+bool type_checking_op(sym_entry * ss, sym_entry * s1, sym_entry * s2){
+    
+    if (s1->type == s2->type) {
+        ss = create_temp_entry(s1->type);
+        return true;
+    } else {
+        // Type conversion
+        if (s1->type == _INT && s2->type == _FLOAT) {
+            ss = create_temp_entry(_FLOAT);
+            syntantic_warning("conversion INT to FLOAT\n");
+            // Value conversion
+            return true;
+        } else if (s1->type == _FLOAT && s2->type == _INT) {
+            ss = create_temp_entry(_FLOAT);
+            syntantic_warning("conversion INT to FLOAT\n");
+            // Value conversion
+            return true;
+        } else {
+            ss = create_temp_entry(_ERROR);
+            syntantic_error("Cannot convert types\n");
+            return false;
+        }
+    }
+}
+
+bool type_checking_relop(sym_entry * ss, sym_entry * s1, sym_entry * s2){
+    
+    if (s1->type == s2->type) {
+        ss = create_temp_entry(_BOOL);
+        return true;
+    } else {
+        // Type conversion 
+        if (s1->type == _INT && s2->type == _FLOAT) {
+            ss = create_temp_entry(_BOOL);
+            syntantic_warning("conversion INT to FLOAT\n");
+            // Value conversion
+            return true;
+        } else if (s1->type == _FLOAT && s2->type == _INT) {
+            ss = create_temp_entry(_BOOL);
+            syntantic_warning("conversion INT to FLOAT\n");
+            // Value conversion
+            return true;
+        } else {
+            ss = create_temp_entry(_ERROR);
+            syntantic_error("Cannot convert types\n");
+            return false;
+        }
+    }
+}
+
+bool type_checking_assign(sym_entry * ss, sym_entry * s1, sym_entry * s2){
+    
+    if (s1->type == s2->type) {
+        ss = create_temp_entry(_EMPTY);
+        return true;
+    } else {
+        // Type conversion 
+        if (s1->type == _INT && s2->type == _FLOAT) {
+            ss = create_temp_entry(_ERROR);
+            // Value conversion
+            return false;
+        } else if (s1->type == _FLOAT && s2->type == _INT) {
+            ss = create_temp_entry(_EMPTY);
+            // Value conversion
+            return true;
+        } else {
+            ss = create_temp_entry(_ERROR);
+            syntantic_error("Cannot convert ");
+            printf("%s into %s\n",s1->type,s2->type);
+            return false;
+        }
+    }
+}
+
+
 /* GLib Hash functions */
 
 guint hash_func (gconstpointer key) {
@@ -286,6 +380,7 @@ void print_hash_table (GHashTable * table){
 
 sym_entry * create_temp_entry(string type){
     sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
+    entry->identifier = "temp";
     entry->type = type;
     entry->value = 0;
     
