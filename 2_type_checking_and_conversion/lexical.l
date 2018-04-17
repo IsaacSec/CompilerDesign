@@ -173,7 +173,7 @@
 [A-Za-z_][A-Za-z0-9_]*          {
         
             sym_entry * newsym = symlook(yytext);
-            yylval.symp = newsym;  
+            yylval.symp = newsym;
         return ID; 
     }
 [^ ]                            { errorFound(); }

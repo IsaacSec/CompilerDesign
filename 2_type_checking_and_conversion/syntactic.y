@@ -81,7 +81,7 @@
 
 program: var_dec stmt_seq   {
                                 if ($1->type == _ERROR || $2->type == _ERROR){
-                                    printf ("Semantic error:\n");
+                                    printf ("Semantic errors found\n");
                                 } else {
                                     printf ("No errors found\n");
                                 } 
@@ -91,7 +91,9 @@ program: var_dec stmt_seq   {
 var_dec: var_dec single_dec { 
                                 $$ = $2; 
                             }
-    |                       {   $$ = create_temp_entry(_EMPTY);}
+    |                       {   
+                                $$ = create_temp_entry(_EMPTY);
+                            }
     ;
 
 single_dec: type ID SEMI    {
@@ -105,14 +107,14 @@ type: INTEGER   { $$ = _INT; }
     ;
 
 stmt_seq: stmt_seq stmt         {
-                                    if ($1->type == _EMPTY){
+                                    if ($1->type == _EMPTY && $2->type == _EMPTY){
                                         $$ = create_temp_entry(_EMPTY);
                                         // Continue
                                     } else {
                                         $$ = create_temp_entry(_ERROR);
                                     }
                                 }
-    |                           {   $$ = create_temp_entry(_EMPTY);}
+    |                           {   $$ = create_temp_entry(_EMPTY); }
     ;
 
 stmt: IF exp THEN stmt ELSE stmt            {   
@@ -142,8 +144,9 @@ stmt: IF exp THEN stmt ELSE stmt            {
                                                     $$ = create_temp_entry(_ERROR); 
                                                 }
                                             }
-    |   variable ASSIGN exp SEMI            {
-                                                if (type_checking_assign($$,$1,$3)) {
+    |   variable ASSIGN exp SEMI            {   
+                                                //printf("Assigment: "); print_sym_entry($$);
+                                                if (type_checking_assign(&$$,$1,$3)) {
                                                     $$ = create_temp_entry(_EMPTY);
                                                     // Continue
                                                 } else {
@@ -174,14 +177,15 @@ stmt: IF exp THEN stmt ELSE stmt            {
 block: LBRACE stmt_seq RBRACE       { $$ = $2;}
     ;
 
-exp: simple_exp LT simple_exp       { 
-                                        if (type_checking_relop($$,$1,$3)) {
-                                            
+exp: simple_exp LT simple_exp       {
+                                        //printf("Relop: "); print_sym_entry($$); 
+                                        if (type_checking_relop(&$$,$1,$3)) {
                                             // Continue
-                                        }      
+                                        }
                                     }
     |   simple_exp EQ simple_exp    {   // Note ---- Check boolean type
-                                        if (type_checking_relop($$,$1,$3)) {
+                                        //printf("Reoop: "); print_sym_entry($$);
+                                        if (type_checking_relop(&$$,$1,$3)) {
                                             // Continue
                                         }
                                     }
@@ -189,12 +193,12 @@ exp: simple_exp LT simple_exp       {
     ;
 
 simple_exp: simple_exp PLUS term                {
-                                                    if (type_checking_op($$,$1,$3)) {
+                                                    if (type_checking_op(&$$,$1,$3)) {
                                                         // Continue
                                                     }
                                                 }
     |   simple_exp MINUS term %prec UMINUS      { 
-                                                    if (type_checking_op($$,$1,$3)) {
+                                                    if (type_checking_op(&$$,$1,$3)) {
                                                         // Continue
                                                     }        
                                                 }
@@ -202,12 +206,12 @@ simple_exp: simple_exp PLUS term                {
     ;
 
 term: term TIMES factor     {   
-                                if (type_checking_op($$,$1,$3)) {
+                                if (type_checking_op(&$$,$1,$3)) {
                                     // Continue
                                 }
                             }
     |   term DIV factor     {   
-                                if (type_checking_op($$,$1,$3)) {
+                                if (type_checking_op(&$$,$1,$3)) {
                                     // Continue
                                 }
                             }    
@@ -238,73 +242,81 @@ void syntantic_error(string message){
     printf("Error: (line:%d): %s",yylineno,message);
 }
 
-bool type_checking_op(sym_entry * ss, sym_entry * s1, sym_entry * s2){
-    
+bool type_checking_op(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
+    sym_entry * sp = create_temp_entry(_UNDEF);
+    *ss = sp;
+
     if (s1->type == s2->type) {
-        ss = create_temp_entry(s1->type);
+        sp->type = s1->type;
         return true;
     } else {
         // Type conversion
         if (s1->type == _INT && s2->type == _FLOAT) {
-            ss = create_temp_entry(_FLOAT);
+            sp->type = _FLOAT;
             syntantic_warning("conversion INT to FLOAT\n");
             // Value conversion
             return true;
         } else if (s1->type == _FLOAT && s2->type == _INT) {
-            ss = create_temp_entry(_FLOAT);
+            sp->type = _FLOAT;
             syntantic_warning("conversion INT to FLOAT\n");
             // Value conversion
             return true;
         } else {
-            ss = create_temp_entry(_ERROR);
+            sp->type = _ERROR;
             syntantic_error("Cannot convert types\n");
             return false;
         }
     }
 }
 
-bool type_checking_relop(sym_entry * ss, sym_entry * s1, sym_entry * s2){
-    
+bool type_checking_relop(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
+    sym_entry * sp = create_temp_entry(_UNDEF);
+    *ss = sp;
+
     if (s1->type == s2->type) {
-        ss = create_temp_entry(_BOOL);
+        sp->type = _BOOL;
         return true;
     } else {
         // Type conversion 
         if (s1->type == _INT && s2->type == _FLOAT) {
-            ss = create_temp_entry(_BOOL);
+            sp->type = _BOOL;
             syntantic_warning("conversion INT to FLOAT\n");
             // Value conversion
             return true;
         } else if (s1->type == _FLOAT && s2->type == _INT) {
-            ss = create_temp_entry(_BOOL);
+            sp->type = _BOOL;
             syntantic_warning("conversion INT to FLOAT\n");
             // Value conversion
             return true;
         } else {
-            ss = create_temp_entry(_ERROR);
+            sp->type = _ERROR;
             syntantic_error("Cannot convert types\n");
             return false;
         }
     }
+
+    //ss->value=1;
 }
 
-bool type_checking_assign(sym_entry * ss, sym_entry * s1, sym_entry * s2){
-    
+bool type_checking_assign(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
+    sym_entry * sp = create_temp_entry(_UNDEF);
+    *ss = sp;
+
     if (s1->type == s2->type) {
-        ss = create_temp_entry(_EMPTY);
+        sp->type = _EMPTY;
         return true;
     } else {
         // Type conversion 
         if (s1->type == _INT && s2->type == _FLOAT) {
-            ss = create_temp_entry(_ERROR);
+            sp->type = _ERROR;
             // Value conversion
             return false;
         } else if (s1->type == _FLOAT && s2->type == _INT) {
-            ss = create_temp_entry(_EMPTY);
+            sp->type = _EMPTY;
             // Value conversion
             return true;
         } else {
-            ss = create_temp_entry(_ERROR);
+            sp->type = _ERROR;
             syntantic_error("Cannot convert ");
             printf("%s into %s\n",s1->type,s2->type);
             return false;
@@ -424,7 +436,7 @@ sym_entry * symlook (string s) {
 }
 
 void print_sym_entry(sym_entry * symp){
-    printf("%s %s\n",symp->identifier,symp->type);
+    printf("%s %s %lu\n",symp->identifier,symp->type,symp->value);
 }
 
 /* Bison does NOT define the main entry point so define it here */

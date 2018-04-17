@@ -26,6 +26,7 @@ sym_entry *symlook(string s);
 sym_entry * create_temp_entry(string type);
 
 /* Type checking and conversion */
-bool type_checking_op(sym_entry * ss, sym_entry * s1, sym_entry * s2);
-bool type_checking_assign(sym_entry * ss, sym_entry * s1, sym_entry * s2);
-bool type_checking_relop(sym_entry * ss, sym_entry * s1, sym_entry * s2);
+bool type_checking_op(sym_entry ** ss, sym_entry * s1, sym_entry * s2);
+bool type_checking_assign(sym_entry ** ss, sym_entry * s1, sym_entry * s2);
+bool type_checking_relop(sym_entry ** ss, sym_entry * s1, sym_entry * s2);
+void print_sym_entry(sym_entry * symp);
