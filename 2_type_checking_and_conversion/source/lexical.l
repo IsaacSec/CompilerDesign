@@ -3,7 +3,7 @@
     #include <string.h>
     /* References from bison (TOKENS) */
     #include "syntactic.tab.h"
-    #include "table.h"
+    #include "../headers/table.h"
 
     /* Error handling variables to access with bison */
     char * yytext;

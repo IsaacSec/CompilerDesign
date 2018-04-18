@@ -1,5 +1,5 @@
-#include "table.h"
-#include "typehandle.h"
+#include "../headers/table.h"
+#include "../headers/typehandle.h"
 
 /* GLib Hash functions */
 

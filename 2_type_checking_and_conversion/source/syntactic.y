@@ -1,8 +1,8 @@
 %{
-    #include "definitions.h"
-    #include "table.h"
-    #include "typehandle.h"
-    #include "semantic.h"
+    #include "../headers/definitions.h"
+    #include "../headers/table.h"
+    #include "../headers/typehandle.h"
+    #include "../headers/semantic.h"
     
     int yylineno;
     char * yytext;

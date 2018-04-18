@@ -12,7 +12,7 @@ B_SRC=syntactic.y
 B_OUT=syntactic.tab.c
 L_SRC=lexical.l
 L_OUT=lex.yy.c
-INPUT_FILE=test01.c
+INPUT_FILE=../test/test01.c
 TRASH_FILES=*.o lex*.c syntactic.tab.* syntactic.output
 
 $(EXECUTABLE): $(SOURCES)

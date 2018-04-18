@@ -1,4 +1,4 @@
-#include "typehandle.h"
+#include "../headers/typehandle.h"
 
 string _FLOAT = "float";
 string _INT = "integer";
