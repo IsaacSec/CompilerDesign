@@ -81,16 +81,13 @@ void print_sym_entry(sym_entry * symp){
 }
 
 /* Function to manage symbol table */
-sym_entry * symlook (string s) {
 
+sym_entry * symput (string s) {
 
-    // Tha table hasnt been created
+    // The table hasn't been created
     if (symtable == NULL) {
-        symtable = g_hash_table_new_full(
-            hash_func,
-            key_equal_func,
-            key_destroy_func,
-            value_destroy_fun);
+        printf("CRITICAL ERROR: The symbol table has not been created yet.");
+        return NULL;
     }
 
     gpointer gp = s;
@@ -98,7 +95,7 @@ sym_entry * symlook (string s) {
     // Search the key in the hash table
     if (g_hash_table_contains(symtable, gp) == TRUE) {
 
-        return g_hash_table_lookup (symtable, gp);
+        return NULL;
     
     } else {
         // Create a new symbol entry
@@ -113,5 +110,26 @@ sym_entry * symlook (string s) {
         } else {
             return NULL;
         }
+    }   
+}
+
+sym_entry * symlook (string s) {
+
+    // The table hasn't been created
+    if (symtable == NULL) {
+        printf("CRITICAL ERROR: The symbol table has not been created yet.");
+        return NULL;
+    }
+
+    gpointer gp = s;
+    
+    // Search the key in the hash table
+    if (g_hash_table_contains(symtable, gp) == TRUE) {
+
+        return g_hash_table_lookup (symtable, gp);
+    
+    } else {
+        
+        return NULL;
     }   
 }

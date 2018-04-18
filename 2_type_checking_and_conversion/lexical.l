@@ -172,14 +172,12 @@
     }
 [0-9]+                     {
         
-            yylval.ival = atoi(yytext);
-        
+        yylval.ival = atoi(yytext);
         return INT_NUM;
     }                     
 [A-Za-z_][A-Za-z0-9_]*          {
-        
-            sym_entry * newsym = symlook(yytext);
-            yylval.symp = newsym;
+
+        yylval.name = strdup(yytext);
         return ID; 
     }
 [^ ]                            { errorFound(); }

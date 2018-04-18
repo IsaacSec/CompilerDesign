@@ -21,7 +21,7 @@
   struct _sym_entry *symp;
 }
 
-%token <symp> ID 
+%token <name> ID 
 %token SEMI
 %token <string> INTEGER
 %token <string> FLOAT
@@ -89,8 +89,11 @@ var_dec: var_dec single_dec {
     ;
 
 single_dec: type ID SEMI    {
-                                $$ = create_temp_entry(_EMPTY);
-                                $2->type = $1;
+                                //$$ = create_temp_entry(_EMPTY);
+                                //$2->type = $1;
+                                if (check_definition(&$$, $2, $1)) {
+                                    // Continue
+                                }
                             }   
     ;
 
@@ -216,7 +219,11 @@ factor: LPAREN exp RPAREN       { $$ = $2; }
     |   variable                { $$ = $1; }
     ;
     
-variable: ID { $$ = $1; }
+variable: ID    { 
+                    if (check_variable(&$$, $1)) {
+                        // Continue
+                    } 
+                }
     ;
 
 %%
@@ -228,13 +235,44 @@ void yyerror (char *msg){
 
 /* Semantic funtions implementation */
 void semantic_warning(string message){
-    printf("Warning (line:%d): %s",yylineno,message);
+    printf("[Warning]: (line:%d): %s",yylineno,message);
 }
 
 void semantic_error(string message){
-    printf("Error: (line:%d): %s",yylineno,message);
+    printf("[Error]:   (line:%d): %s",yylineno,message);
 }
 
+bool check_variable(sym_entry ** ss, string identifier) {
+    sym_entry * sp = symlook(identifier);
+
+    if (sp == NULL) {
+        semantic_error("");
+        printf("Variable %s not defined\n",identifier);
+        sp = create_temp_entry(_ERROR);    
+        *ss = sp;
+        return false;
+    } else {
+        *ss = sp;
+        return true;
+    }
+}
+
+bool check_definition(sym_entry ** ss, string identifier, string type) {
+    sym_entry * sp = symput(identifier);
+
+    if (sp == NULL) {
+        semantic_error("");
+        printf("Variable %s is already defined\n",identifier);
+        sp = create_temp_entry(_ERROR); 
+        *ss = sp;
+        return false;   
+    } else {
+        sp->type = type;
+        sp = create_temp_entry(_EMPTY);
+        *ss = sp;
+        return true;
+    }
+}
 
 
 /* Bison does NOT define the main entry point so define it here */

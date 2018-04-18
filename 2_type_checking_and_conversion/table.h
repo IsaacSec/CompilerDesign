@@ -32,6 +32,7 @@ void key_destroy_func (gpointer data);
 void value_destroy_fun (gpointer data);
 void print_hash_table (GHashTable * table);
 
+sym_entry *symput(string s);
 sym_entry *symlook(string s);
 
 #endif
