@@ -1,6 +1,7 @@
 ## Syntactic Analyzer for tinyC
 
 **IMPORTANT:** If you are using MacOS, change the flag -lfl in CC_FLAGS with -ll  (Makefile)
+
 **IMPORTANT:** Compile in source folder
 
 # Requirements
