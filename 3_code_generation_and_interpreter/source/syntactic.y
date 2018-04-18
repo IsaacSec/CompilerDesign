@@ -89,8 +89,6 @@ var_dec: var_dec single_dec {
     ;
 
 single_dec: type ID SEMI    {
-                                //$$ = create_temp_entry(_EMPTY);
-                                //$2->type = $1;
                                 if (check_definition(&$$, $2, $1)) {
                                     // Continue
                                 }
@@ -139,9 +137,8 @@ stmt: IF exp THEN stmt ELSE stmt            {
                                                     $$ = create_temp_entry(_ERROR); 
                                                 }
                                             }
-    |   variable ASSIGN exp SEMI            {   
-                                                //printf("Assigment: "); print_sym_entry($$);
-                                                if (type_checking_assign(&$$,$1,$3)) {
+    |   variable ASSIGN exp SEMI            {
+                                                if (check_assign_type(&$$,$1,$3)) {
                                                     $$ = create_temp_entry(_EMPTY);
                                                     // Continue
                                                 } else {
@@ -173,14 +170,12 @@ block: LBRACE stmt_seq RBRACE       { $$ = $2;}
     ;
 
 exp: simple_exp LT simple_exp       {
-                                        //printf("Relop: "); print_sym_entry($$); 
-                                        if (type_checking_relop(&$$,$1,$3)) {
+                                        if (check_relop_type(&$$,$1,$3)) {
                                             // Continue
                                         }
                                     }
-    |   simple_exp EQ simple_exp    {   // Note ---- Check boolean type
-                                        //printf("Reoop: "); print_sym_entry($$);
-                                        if (type_checking_relop(&$$,$1,$3)) {
+    |   simple_exp EQ simple_exp    {   
+                                        if (check_relop_type(&$$,$1,$3)) {
                                             // Continue
                                         }
                                     }
@@ -188,12 +183,12 @@ exp: simple_exp LT simple_exp       {
     ;
 
 simple_exp: simple_exp PLUS term                {
-                                                    if (type_checking_op(&$$,$1,$3)) {
+                                                    if (check_op_type(&$$,$1,$3)) {
                                                         // Continue
                                                     }
                                                 }
     |   simple_exp MINUS term %prec UMINUS      { 
-                                                    if (type_checking_op(&$$,$1,$3)) {
+                                                    if (check_op_type(&$$,$1,$3)) {
                                                         // Continue
                                                     }        
                                                 }
@@ -201,12 +196,12 @@ simple_exp: simple_exp PLUS term                {
     ;
 
 term: term TIMES factor     {   
-                                if (type_checking_op(&$$,$1,$3)) {
+                                if (check_op_type(&$$,$1,$3)) {
                                     // Continue
                                 }
                             }
     |   term DIV factor     {   
-                                if (type_checking_op(&$$,$1,$3)) {
+                                if (check_op_type(&$$,$1,$3)) {
                                     // Continue
                                 }
                             }    
