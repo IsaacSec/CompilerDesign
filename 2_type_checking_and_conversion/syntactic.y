@@ -310,6 +310,7 @@ bool type_checking_assign(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
         if (s1->type == _INT && s2->type == _FLOAT) {
             sp->type = _ERROR;
             // Value conversion
+            syntantic_error("Cannot assign Float to INT\n");
             return false;
         } else if (s1->type == _FLOAT && s2->type == _INT) {
             sp->type = _EMPTY;
