@@ -1,25 +1,17 @@
 %{
-    #include <string.h>
-    #include <stdio.h>
-    #include <glib.h>
-    #include <stdbool.h>
+    #include "definitions.h"
     #include "table.h"
-
-    /* TYPES */
-    const string _FLOAT = "float";
-    const string _INT = "integer";
-    const string _UNDEF = "undefined";
-    const string _BOOL = "boolean";
-    const string _ERROR = "error";
-    const string _EMPTY = "empty";
-
-    GHashTable * symtable;
+    #include "typehandle.h"
+    #include "semantic.h"
     
     int yylineno;
     char * yytext;
     
     /* Function definitions */
     void yyerror (char *string);
+    
+    /* Supress Bison warning */
+    int yylex();
 %}
 
 %union {
@@ -234,211 +226,16 @@ void yyerror (char *msg){
     printf("%d: %s near token '%s'\n", yylineno, msg, yytext);
 }
 
+/* Semantic funtions implementation */
 void syntantic_warning(string message){
-    printf("Warning (line:%d): %s",yylineno,message);
+    printf("Warning (line:%d): [%s] %s",yylineno,yytext,message);
 }
 
 void syntantic_error(string message){
-    printf("Error: (line:%d): %s",yylineno,message);
-}
-
-bool type_checking_op(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
-    sym_entry * sp = create_temp_entry(_UNDEF);
-    *ss = sp;
-
-    if (s1->type == s2->type) {
-        sp->type = s1->type;
-        return true;
-    } else {
-        // Type conversion
-        if (s1->type == _INT && s2->type == _FLOAT) {
-            sp->type = _FLOAT;
-            syntantic_warning("conversion INT to FLOAT\n");
-            // Value conversion
-            return true;
-        } else if (s1->type == _FLOAT && s2->type == _INT) {
-            sp->type = _FLOAT;
-            syntantic_warning("conversion INT to FLOAT\n");
-            // Value conversion
-            return true;
-        } else {
-            sp->type = _ERROR;
-            syntantic_error("Cannot convert types\n");
-            return false;
-        }
-    }
-}
-
-bool type_checking_relop(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
-    sym_entry * sp = create_temp_entry(_UNDEF);
-    *ss = sp;
-
-    if (s1->type == s2->type) {
-        sp->type = _BOOL;
-        return true;
-    } else {
-        // Type conversion 
-        if (s1->type == _INT && s2->type == _FLOAT) {
-            sp->type = _BOOL;
-            syntantic_warning("conversion INT to FLOAT\n");
-            // Value conversion
-            return true;
-        } else if (s1->type == _FLOAT && s2->type == _INT) {
-            sp->type = _BOOL;
-            syntantic_warning("conversion INT to FLOAT\n");
-            // Value conversion
-            return true;
-        } else {
-            sp->type = _ERROR;
-            syntantic_error("Cannot convert types\n");
-            return false;
-        }
-    }
-
-    //ss->value=1;
-}
-
-bool type_checking_assign(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
-    sym_entry * sp = create_temp_entry(_UNDEF);
-    *ss = sp;
-
-    if (s1->type == s2->type) {
-        sp->type = _EMPTY;
-        return true;
-    } else {
-        // Type conversion 
-        if (s1->type == _INT && s2->type == _FLOAT) {
-            sp->type = _ERROR;
-            // Value conversion
-            syntantic_error("Cannot assign Float to INT\n");
-            return false;
-        } else if (s1->type == _FLOAT && s2->type == _INT) {
-            sp->type = _EMPTY;
-            // Value conversion
-            return true;
-        } else {
-            sp->type = _ERROR;
-            syntantic_error("Cannot convert ");
-            printf("%s into %s\n",s1->type,s2->type);
-            return false;
-        }
-    }
+    printf("Error: (line:%d): [%s] %s",yylineno,yytext,message);
 }
 
 
-/* GLib Hash functions */
-
-guint hash_func (gconstpointer key) {
-    // Our hash function is literally the hash of the key string
-    return g_str_hash((string) key);
-}
-
-gboolean key_equal_func (gconstpointer a, gconstpointer b) {
-    string key_a = (string) a;
-    string key_b = (string) b;
-
-    if (strcmp(key_a, key_b) == 0) {
-        return TRUE;
-    } else {
-        return FALSE;
-    }
-}
-
-
-
-// Not tested beacause at this point we dont need to remove any item
-void key_destroy_func (gpointer data){
-    free(data);
-}
-
-// Not tested beacause at this point we dont need to remove any item
-void value_destroy_fun (gpointer data){
-    
-    if (data != NULL) {
-        sym_entry * entry = (sym_entry*) data;
-        
-        if (entry->identifier != NULL) {
-            free(entry->identifier);
-        }
-        
-        // We cannot free the type because it is a EXPLICIT STRING
-        entry->type = NULL; 
-
-        free(entry); //Check
-    }
-}
-
-
-void print_hash_table (GHashTable * table){
-
-    GHashTableIter iter;
-    gpointer key, value;
-    g_hash_table_iter_init (&iter, table);
-    
-    printf("\n+------------------------------------------------------+\n");
-    printf("|                  Symbol Hash Table                   |\n");
-    printf("+---------+------------+----------------+--------------+\n");
-    printf("|   KEY   | identifier |      type      |     value    |\n");
-    printf("+---------+------------+----------------+--------------+\n");
-
-    // Iterate hash table to print every item
-    while (g_hash_table_iter_next (&iter, &key, &value)) {
-        sym_entry * entry = (sym_entry*) value;
-        printf("| %7s | %10s | %14s | %12ld |\n",(string)key, entry->identifier, entry->type, entry->value);
-    }
-
-    printf("+---------+------------+----------------+--------------+\n");
-}
-
-
-sym_entry * create_temp_entry(string type){
-    sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
-    entry->identifier = "temp";
-    entry->type = type;
-    entry->value = 0;
-    
-    return entry;
-}
-
-/* Function to manage symbol table */
-sym_entry * symlook (string s) {
-
-
-    // Tha table hasnt been created
-    if (symtable == NULL) {
-        symtable = g_hash_table_new_full(
-            hash_func,
-            key_equal_func,
-            key_destroy_func,
-            value_destroy_fun);
-    }
-
-    gpointer gp = s;
-    
-    // Search the key in the hash table
-    if (g_hash_table_contains(symtable, gp) == TRUE) {
-
-        return g_hash_table_lookup (symtable, gp);
-    
-    } else {
-        // Create a new symbol entry
-        sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
-        entry->identifier = strdup(s);
-        entry->type = _UNDEF;
-        entry->value = 0;
-
-        // We duplicate s instead of using entry->identifier as a key to avoid double free
-        if (g_hash_table_insert(symtable, strdup(s), entry) == TRUE) {
-            return entry;
-        } else {
-            return NULL;
-        }
-    }   
-}
-
-void print_sym_entry(sym_entry * symp){
-    printf("%s %s %lu\n",symp->identifier,symp->type,symp->value);
-}
 
 /* Bison does NOT define the main entry point so define it here */
 int main (){
@@ -458,5 +255,6 @@ int main (){
     yyparse();
 
     print_hash_table(symtable);
+    //g_hash_table_destroy(symtable);
     return 0;
 }

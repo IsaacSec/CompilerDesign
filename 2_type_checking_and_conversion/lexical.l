@@ -82,7 +82,13 @@
     }
 
 %}
+
+/* Supress Lex warnings */
+%option noinput
+%option nounput
+
 /* This is the rule definition */
+
 %%
 \n                              { yylineno++;nlines++; }
 "int"|"float"                   { 
