@@ -151,7 +151,7 @@ stmt: IF exp THEN stmt ELSE stmt            {
                                                     // Continue;
                                                 } else {
                                                     $$ = create_temp_entry(_ERROR); 
-                                                    syntantic_error("The variable must be an Integer or Float type\n");
+                                                    semantic_error("The variable must be an integer or float type\n");
                                                 }
                                             }
     |   WRITE LPAREN exp RPAREN SEMI        {
@@ -160,7 +160,7 @@ stmt: IF exp THEN stmt ELSE stmt            {
                                                     // Continue;
                                                 } else {
                                                     $$ = create_temp_entry(_ERROR); 
-                                                    syntantic_error("The variable must be an Integer or Float type\n");
+                                                    semantic_error("The variable must be an integer or float type\n");
                                                 }
                                             }
     |   block                               { $$ = $1; }
@@ -227,12 +227,12 @@ void yyerror (char *msg){
 }
 
 /* Semantic funtions implementation */
-void syntantic_warning(string message){
-    printf("Warning (line:%d): [%s] %s",yylineno,yytext,message);
+void semantic_warning(string message){
+    printf("Warning (line:%d): %s",yylineno,message);
 }
 
-void syntantic_error(string message){
-    printf("Error: (line:%d): [%s] %s",yylineno,yytext,message);
+void semantic_error(string message){
+    printf("Error: (line:%d): %s",yylineno,message);
 }
 
 

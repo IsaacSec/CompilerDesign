@@ -18,17 +18,17 @@ bool type_checking_op(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
         // Type conversion
         if (s1->type == _INT && s2->type == _FLOAT) {
             sp->type = _FLOAT;
-            syntantic_warning("conversion INT to FLOAT\n");
+            semantic_warning("Conversion integer to float\n");
             // Value conversion
             return true;
         } else if (s1->type == _FLOAT && s2->type == _INT) {
             sp->type = _FLOAT;
-            syntantic_warning("conversion INT to FLOAT\n");
+            semantic_warning("Conversion integer to float\n");
             // Value conversion
             return true;
         } else {
             sp->type = _ERROR;
-            syntantic_error("Cannot convert types\n");
+            semantic_error("Cannot convert types\n");
             return false;
         }
     }
@@ -45,17 +45,17 @@ bool type_checking_relop(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
         // Type conversion 
         if (s1->type == _INT && s2->type == _FLOAT) {
             sp->type = _BOOL;
-            syntantic_warning("conversion INT to FLOAT\n");
+            semantic_warning("Conversion interger to float\n");
             // Value conversion
             return true;
         } else if (s1->type == _FLOAT && s2->type == _INT) {
             sp->type = _BOOL;
-            syntantic_warning("conversion INT to FLOAT\n");
+            semantic_warning("Conversion integer to float\n");
             // Value conversion
             return true;
         } else {
             sp->type = _ERROR;
-            syntantic_error("Cannot convert types\n");
+            semantic_error("Cannot convert types\n");
             return false;
         }
     }
@@ -75,7 +75,7 @@ bool type_checking_assign(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
         if (s1->type == _INT && s2->type == _FLOAT) {
             sp->type = _ERROR;
             // Value conversion
-            syntantic_error("Cannot assign Float to INT\n");
+            semantic_error("Cannot assign float to integer variable\n");
             return false;
         } else if (s1->type == _FLOAT && s2->type == _INT) {
             sp->type = _EMPTY;
@@ -83,8 +83,8 @@ bool type_checking_assign(sym_entry ** ss, sym_entry * s1, sym_entry * s2){
             return true;
         } else {
             sp->type = _ERROR;
-            syntantic_error("Cannot convert ");
-            printf("%s into %s\n",s1->type,s2->type);
+            semantic_error("Cannot assign ");
+            printf("%s to %s variable\n",s2->type,s1->type);
             return false;
         }
     }

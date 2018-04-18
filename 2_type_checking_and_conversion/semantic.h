@@ -4,7 +4,7 @@
 #include "definitions.h"
 
 /* General functions */
-void syntantic_warning(string message);
-void syntantic_error(string message);
+void semantic_warning(string message);
+void semantic_error(string message);
 
 #endif
