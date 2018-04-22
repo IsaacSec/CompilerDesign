@@ -4,21 +4,20 @@
 #include "definitions.h"
 
 GHashTable * symtable;
+int tempCounter;
 
-struct _sym_entry {
-    string identifier;                    /* The name is just the string */
-    string type;
-    long value;                          /* The value is a float */
-};
-
-/*
 union _v_value {
     int ival;
     float fval;
 };
 
-typedef struct _v_value v_value;
-*/
+typedef union _v_value v_value;
+
+struct _sym_entry {
+    string identifier;                    /* The name is just the string */
+    string type;
+    v_value value;                          /* The value is a float */
+};
 
 typedef struct _sym_entry sym_entry;
 
@@ -34,5 +33,8 @@ void print_hash_table (GHashTable * table);
 
 sym_entry *symput(string s);
 sym_entry *symlook(string s);
+
+sym_entry *new_temp(string type);
+string gen_temp_id();
 
 #endif

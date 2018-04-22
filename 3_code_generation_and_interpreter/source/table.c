@@ -1,6 +1,8 @@
 #include "../headers/table.h"
 #include "../headers/typehandle.h"
 
+int tempCounter = 0;
+
 /* GLib Hash functions */
 
 guint hash_func (gconstpointer key) {
@@ -59,8 +61,21 @@ void print_hash_table (GHashTable * table){
 
     // Iterate hash table to print every item
     while (g_hash_table_iter_next (&iter, &key, &value)) {
-        sym_entry * entry = (sym_entry*) value;
-        printf("| %7s | %10s | %14s | %12ld |\n",(string)key, entry->identifier, entry->type, entry->value);
+
+        if (value == NULL || key == NULL) {
+            printf("|______________________________________________________|");
+        } else {
+            sym_entry * entry = (sym_entry*) value;
+            printf("| %7s | %10s | %14s |",(string)key, entry->identifier, entry->type);
+            
+            if (entry->type == _INT) {
+                printf(" %12d |\n",entry->value.ival);
+            } else if (entry->type == _FLOAT) {
+                printf(" %12.2f |\n",entry->value.fval);
+            } else {
+                printf(" _________ |\n");
+            }
+        }
     }
 
     printf("+---------+------------+----------------+--------------+\n");
@@ -71,13 +86,13 @@ sym_entry * create_temp_entry(string type){
     sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
     entry->identifier = "temp";
     entry->type = type;
-    entry->value = 0;
+    entry->value.ival = 0;
     
     return entry;
 }
 
 void print_sym_entry(sym_entry * symp){
-    printf("%s %s %lu\n",symp->identifier,symp->type,symp->value);
+    printf("%s %s\n",symp->identifier,symp->type);
 }
 
 /* Function to manage symbol table */
@@ -102,7 +117,7 @@ sym_entry * symput (string s) {
         sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
         entry->identifier = strdup(s);
         entry->type = _UNDEF;
-        entry->value = 0;
+        entry->value.ival = 0;
 
         // We duplicate s instead of using entry->identifier as a key to avoid double free
         if (g_hash_table_insert(symtable, strdup(s), entry) == TRUE) {
@@ -132,4 +147,49 @@ sym_entry * symlook (string s) {
         
         return NULL;
     }   
+}
+
+sym_entry *new_temp(string type) {
+     // The table hasn't been created
+    if (symtable == NULL) {
+        printf("CRITICAL ERROR: The symbol table has not been created yet.");
+        return NULL;
+    }
+
+
+    // Generate variable identifier
+    string s = gen_temp_id();
+    gpointer gp = s;
+    
+    // Search the key in the hash table
+    if (g_hash_table_contains(symtable, gp) == TRUE) {
+
+        return NULL;
+    
+    } else {
+        // Create a new symbol entry
+        sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
+        entry->identifier = strdup(s);
+        entry->type = type;
+        if (type == _FLOAT) {
+            entry->value.fval = 0.0;
+        } else {
+            entry->value.ival = 0;
+        }
+
+        // We duplicate s instead of using entry->identifier as a key to avoid double free
+        if (g_hash_table_insert(symtable, strdup(s), entry) == TRUE) {
+            return entry;
+        } else {
+            return NULL;
+        }
+    }   
+}
+
+string gen_temp_id() {
+    string number = malloc(sizeof(char) * 12);
+    sprintf(number, "t%d", tempCounter);
+    tempCounter++;
+
+    return number;
 }

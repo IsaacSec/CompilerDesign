@@ -3,6 +3,7 @@
     #include "../headers/table.h"
     #include "../headers/typehandle.h"
     #include "../headers/semantic.h"
+    #include "../headers/attribute.h"
     
     int yylineno;
     char * yytext;
@@ -19,6 +20,7 @@
   float fval;
   char * name;
   struct _sym_entry *symp;
+  struct _node_attr *attr;
 }
 
 %token <name> ID 
@@ -57,17 +59,17 @@
 
 /*  */
 
-%type <symp> var_dec
-%type <symp> single_dec
+%type <attr> var_dec
+%type <attr> single_dec
 %type <name> type
-%type <symp> variable
-%type <symp> factor
-%type <symp> term
-%type <symp> exp
-%type <symp> simple_exp
-%type <symp> stmt_seq
-%type <symp> stmt
-%type <symp> block
+%type <attr> variable
+%type <attr> factor
+%type <attr> term
+%type <attr> exp
+%type <attr> simple_exp
+%type <attr> stmt_seq
+%type <attr> stmt
+%type <attr> block
 
 %%
 
@@ -84,12 +86,13 @@ var_dec: var_dec single_dec {
                                 $$ = $2; 
                             }
     |                       {   
-                                $$ = create_temp_entry(_EMPTY);
+                                $$ = create_node_attr(_EMPTY);
                             }
     ;
 
 single_dec: type ID SEMI    {
-                                if (check_definition(&$$, $2, $1)) {
+                                $$ = create_node_attr(_EMPTY);
+                                if (check_definition($$, $2, $1)) {
                                     // Continue
                                 }
                             }   
@@ -100,67 +103,48 @@ type: INTEGER   { $$ = _INT; }
     ;
 
 stmt_seq: stmt_seq stmt         {
-                                    if ($1->type == _EMPTY && $2->type == _EMPTY){
-                                        $$ = create_temp_entry(_EMPTY);
+                                    $$ = create_node_attr(_EMPTY);
+                                    if (check_stmt_seq_type($$, $1, $2)){
                                         // Continue
-                                    } else {
-                                        $$ = create_temp_entry(_ERROR);
                                     }
                                 }
-    |                           {   $$ = create_temp_entry(_EMPTY); }
+    |                           {   $$ = create_node_attr(_EMPTY); }
     ;
 
 stmt: IF exp THEN stmt ELSE stmt            {   
-                                                if ($2->type == _BOOL){
-                                                    if ($4->type == _EMPTY && $6->type == _EMPTY){
-                                                        $$ = create_temp_entry(_EMPTY);
-                                                    } else {
-                                                        $$ = create_temp_entry(_ERROR);
-                                                    }
-                                                } else {
-                                                    $$ = create_temp_entry(_ERROR);
+                                                $$ = create_node_attr(_EMPTY);
+                                                if (check_complex_stmt_type($$, $2, $4, $6)) {
+                                                    // Continue
                                                 }
                                             }
     |   IF exp THEN stmt                    {
-                                                if ($2->type == _BOOL){
-                                                    $$ = create_temp_entry(_EMPTY);
+                                                $$ = create_node_attr(_EMPTY);
+                                                if (check_stmt_type($$, $2, $4)) {
                                                     // Continue
-                                                } else {
-                                                    $$ = create_temp_entry(_ERROR); 
                                                 }
                                             }
     |   WHILE exp DO stmt                   {   
-                                                if ($2->type == _BOOL){
-                                                    $$ = create_temp_entry(_EMPTY);
+                                                $$ = create_node_attr(_EMPTY);
+                                                if (check_stmt_type($$, $2, $4)) {
                                                     // Continue
-                                                } else {
-                                                    $$ = create_temp_entry(_ERROR); 
                                                 }
                                             }
-    |   variable ASSIGN exp SEMI            {
-                                                if (check_assign_type(&$$,$1,$3)) {
-                                                    $$ = create_temp_entry(_EMPTY);
+    |   variable ASSIGN exp SEMI            {   
+                                                $$ = create_node_attr(_EMPTY);
+                                                if (check_assign_type($$, $1, $3)) {
                                                     // Continue
-                                                } else {
-                                                    $$ = create_temp_entry(_ERROR); 
-                                                } 
+                                                }
                                             }
     |   READ LPAREN variable RPAREN SEMI    {
-                                                if ($3->type == _FLOAT || $3->type == _INT) {
-                                                    $$ = create_temp_entry(_EMPTY);
-                                                    // Continue;
-                                                } else {
-                                                    $$ = create_temp_entry(_ERROR); 
-                                                    semantic_error("The variable must be an integer or float type\n");
+                                                $$ = create_node_attr(_EMPTY);
+                                                if (check_read_type($$, $3)){
+                                                    // Continue
                                                 }
                                             }
     |   WRITE LPAREN exp RPAREN SEMI        {
-                                                if ($3->type == _FLOAT || $3->type == _INT) {
-                                                    $$ = create_temp_entry(_EMPTY);
-                                                    // Continue;
-                                                } else {
-                                                    $$ = create_temp_entry(_ERROR); 
-                                                    semantic_error("The variable must be an integer or float type\n");
+                                                $$ = create_node_attr(_EMPTY);
+                                                if (check_write_type($$, $3)){
+                                                    // Continue
                                                 }
                                             }
     |   block                               { $$ = $1; }
@@ -169,39 +153,45 @@ stmt: IF exp THEN stmt ELSE stmt            {
 block: LBRACE stmt_seq RBRACE       { $$ = $2;}
     ;
 
-exp: simple_exp LT simple_exp       {
-                                        if (check_relop_type(&$$,$1,$3)) {
+exp: simple_exp LT simple_exp       {   
+                                        $$ = create_node_attr(_BOOL);
+                                        if (check_relop_type($$, $1, $3)) {
                                             // Continue
                                         }
                                     }
     |   simple_exp EQ simple_exp    {   
-                                        if (check_relop_type(&$$,$1,$3)) {
+                                        $$ = create_node_attr(_BOOL);
+                                        if (check_relop_type($$, $1, $3)) {
                                             // Continue
                                         }
                                     }
     |   simple_exp                  { $$ = $1; }
     ;
 
-simple_exp: simple_exp PLUS term                {
-                                                    if (check_op_type(&$$,$1,$3)) {
+simple_exp: simple_exp PLUS term                {   
+                                                    $$ = create_node_attr(_ENTRY);
+                                                    if (check_op_type($$, $1, $3)) {
                                                         // Continue
                                                     }
                                                 }
-    |   simple_exp MINUS term %prec UMINUS      { 
-                                                    if (check_op_type(&$$,$1,$3)) {
+    |   simple_exp MINUS term %prec UMINUS      {
+                                                    $$ = create_node_attr(_ENTRY); 
+                                                    if (check_op_type($$, $1, $3)) {
                                                         // Continue
                                                     }        
                                                 }
     |   term                                    { $$ = $1; }    
     ;
 
-term: term TIMES factor     {   
-                                if (check_op_type(&$$,$1,$3)) {
+term: term TIMES factor     {
+                                $$ = create_node_attr(_ENTRY);
+                                if (check_op_type($$, $1, $3)) {
                                     // Continue
                                 }
                             }
     |   term DIV factor     {   
-                                if (check_op_type(&$$,$1,$3)) {
+                                $$ = create_node_attr(_ENTRY);      
+                                if (check_op_type($$, $1, $3)) {
                                     // Continue
                                 }
                             }    
@@ -209,13 +199,22 @@ term: term TIMES factor     {
     ;
 
 factor: LPAREN exp RPAREN       { $$ = $2; }
-    |   INT_NUM                 { $$ = create_temp_entry(_INT); }    
-    |   FLOAT_NUM               { $$ = create_temp_entry(_FLOAT); }
+    |   INT_NUM                 {
+                                    $$ = create_node_attr(_ENTRY);
+                                    $$->entry = new_temp(_INT);
+                                    $$->entry->value.ival = $1; 
+                                }    
+    |   FLOAT_NUM               {   
+                                    $$ = create_node_attr(_ENTRY);
+                                    $$->entry = new_temp(_FLOAT);
+                                    $$->entry->value.fval = $1; 
+                                }
     |   variable                { $$ = $1; }
     ;
     
-variable: ID    { 
-                    if (check_variable(&$$, $1)) {
+variable: ID    {
+                    $$ = create_node_attr(_ENTRY);
+                    if (check_variable($$, $1)) {
                         // Continue
                     } 
                 }
@@ -237,34 +236,31 @@ void semantic_error(string message){
     printf("[Error]:   (line:%d): %s",yylineno,message);
 }
 
-bool check_variable(sym_entry ** ss, string identifier) {
-    sym_entry * sp = symlook(identifier);
+bool check_variable(node_attr * ss, string identifier) {
+    sym_entry * entry = symlook(identifier);
 
-    if (sp == NULL) {
+    if (entry == NULL) {
         semantic_error("");
         printf("Variable %s not defined\n",identifier);
-        sp = create_temp_entry(_ERROR);    
-        *ss = sp;
+        ss->type = _ERROR;
         return false;
     } else {
-        *ss = sp;
+        ss->entry = entry;
         return true;
     }
 }
 
-bool check_definition(sym_entry ** ss, string identifier, string type) {
-    sym_entry * sp = symput(identifier);
+bool check_definition(node_attr * ss, string identifier, string type) {
+    sym_entry * entry = symput(identifier);
 
-    if (sp == NULL) {
+    if (entry == NULL) {
         semantic_error("");
         printf("Variable %s is already defined\n",identifier);
-        sp = create_temp_entry(_ERROR); 
-        *ss = sp;
+        ss->type = _ERROR;
         return false;   
     } else {
-        sp->type = type;
-        sp = create_temp_entry(_EMPTY);
-        *ss = sp;
+        entry->type = type;
+        ss->type = _ENTRY;
         return true;
     }
 }
