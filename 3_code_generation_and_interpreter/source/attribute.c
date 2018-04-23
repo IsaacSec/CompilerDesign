@@ -3,6 +3,9 @@
 node_attr * create_node_attr(string type) {
     node_attr * newNode = (node_attr*) malloc (sizeof (node_attr));
     newNode->type = type;
+    newNode->true_list = NULL;
+    newNode->false_list = NULL;
+    newNode->next_list = NULL;
     return newNode;
 }
 

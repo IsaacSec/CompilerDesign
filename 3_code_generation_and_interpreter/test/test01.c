@@ -29,6 +29,12 @@ int h7;
   h := (10<3);
   j := (h = h2);
   dsadas := 0;
+
+  if (i<10) then {
+
+  } else {
+    
+  }
   
   h3 := h;
 }
