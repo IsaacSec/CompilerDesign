@@ -4,6 +4,7 @@
     #include "../headers/typehandle.h"
     #include "../headers/semantic.h"
     #include "../headers/attribute.h"
+    #include "../headers/codegen.h"
     
     int yylineno;
     char * yytext;
@@ -171,13 +172,15 @@ exp: simple_exp LT simple_exp       {
 simple_exp: simple_exp PLUS term                {   
                                                     $$ = create_node_attr(_ENTRY);
                                                     if (check_op_type($$, $1, $3)) {
-                                                        // Continue
+                                                        gen_op_quad_list($$, $1, $3, ADDITION);
+                                                        print_quads($$->next_list);
                                                     }
                                                 }
     |   simple_exp MINUS term %prec UMINUS      {
                                                     $$ = create_node_attr(_ENTRY); 
                                                     if (check_op_type($$, $1, $3)) {
-                                                        // Continue
+                                                        gen_op_quad_list($$, $1, $3, SUBTRACTION);
+                                                        print_quads($$->next_list);
                                                     }        
                                                 }
     |   term                                    { $$ = $1; }    
@@ -186,13 +189,15 @@ simple_exp: simple_exp PLUS term                {
 term: term TIMES factor     {
                                 $$ = create_node_attr(_ENTRY);
                                 if (check_op_type($$, $1, $3)) {
-                                    // Continue
+                                    gen_op_quad_list($$, $1, $3, MULTIPLICATION);
+                                    print_quads($$->next_list);
                                 }
                             }
     |   term DIV factor     {   
                                 $$ = create_node_attr(_ENTRY);      
                                 if (check_op_type($$, $1, $3)) {
-                                    // Continue
+                                    gen_op_quad_list($$, $1, $3, DIVISION);
+                                    print_quads($$->next_list);
                                 }
                             }    
     |   factor              { $$ = $1; }
@@ -201,13 +206,19 @@ term: term TIMES factor     {
 factor: LPAREN exp RPAREN       { $$ = $2; }
     |   INT_NUM                 {
                                     $$ = create_node_attr(_ENTRY);
-                                    $$->entry = new_temp(_INT);
-                                    $$->entry->value.ival = $1; 
+                                    v_value value;
+                                    value.ival = $1;
+                                    quad * q = gen_temp_constant_quad(_INT, value);
+                                    $$->entry = q->f1.dest;
+                                    $$->next_list = new_list(q);
                                 }    
     |   FLOAT_NUM               {   
                                     $$ = create_node_attr(_ENTRY);
-                                    $$->entry = new_temp(_FLOAT);
-                                    $$->entry->value.fval = $1; 
+                                    v_value value;
+                                    value.fval = $1;
+                                    quad * q = gen_temp_constant_quad(_FLOAT, value);
+                                    $$->entry = q->f1.dest;
+                                    $$->next_list = new_list(q);
                                 }
     |   variable                { $$ = $1; }
     ;
@@ -287,3 +298,13 @@ int main (){
     //g_hash_table_destroy(symtable);
     return 0;
 }
+
+
+/*
+Dudas
+
+Todos son quads?
+Cómo representas read o write en un quad?
+
+
+*/

@@ -37,4 +37,6 @@ sym_entry *symlook(string s);
 sym_entry *new_temp(string type);
 string gen_temp_id();
 
+//void insert_entry (GHashTable * symtable, sym_entry * entry);
+
 #endif
