@@ -26,4 +26,5 @@ bool check_stmt_seq_type(node_attr * ss, node_attr * s1, node_attr * s2);
 bool check_integrity1(node_attr * ss, node_attr * s1);
 bool check_integrity2(node_attr * ss, node_attr * s1, node_attr * s2);
 bool check_integrity3(node_attr * ss, node_attr * s1, node_attr * s2, node_attr * s3);
+bool check_integrity_stmt_seq(node_attr * ss, node_attr * s1, node_attr * s2);
 #endif

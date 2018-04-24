@@ -6,6 +6,7 @@ node_attr * create_node_attr(string type) {
     newNode->true_list = NULL;
     newNode->false_list = NULL;
     newNode->next_list = NULL;
+    newNode->quad_list = NULL;
     return newNode;
 }
 

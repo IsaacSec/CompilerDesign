@@ -30,11 +30,15 @@ int h7;
   j := (h = h2);
   dsadas := 0;
 
-  if (i<10) then {
-
+  if (i7<23) then {
+    i7 := 99;
   } else {
-    
+    i7 := 13;
   }
   
+  if (i7<23) then {
+    i7 := 99;
+  }
+
   h3 := h;
 }

@@ -10,8 +10,20 @@ GList * merge(GList * a, GList * b) {
     return g_list_concat(a, b);
 }
 
-void backpatch (quad * q, int newLine) {
-    
+void backpatch_quad (gpointer data, gpointer user_data) {
+    int * newLine = (int *) user_data;
+    quad * q = (quad *) data;
+
+    if (q->type == Q_JUMP) {
+        q->f3.address = *newLine;
+    } else {
+        printf ("[WARNING]: Backpatch in a not JUMP quad\n");
+    }
+}
+
+void backpatch (GList * list, int newLine) {
+    gpointer line = &newLine;
+    g_list_foreach(list, backpatch_quad, line);
 }
 
 
@@ -34,16 +46,61 @@ quad * gen_temp_constant_quad(string type, v_value constant) {
 
 quad * gen_op_quad(node_attr * ss, node_attr * s1, node_attr * s2, instruction op) {
 
-    sym_entry * temp = new_temp(ss->entry->type);
-    sym_entry * e1 = s1->entry;
-    sym_entry * e2 = s2->entry;
+    if (op == ASSIGN_TO) {
+        sym_entry * e1 = s1->entry;
+        sym_entry * e2 = s2->entry;
+        quad * q = create_operation_quad(next_quad(), Q_OPERATION, op, e1, e2, NULL);
+        return q;
+    } else {
+        //sym_entry * temp = new_temp(ss->entry->type);
+        //printf("Operation: %s\n", ss->entry->identifier);
+        sym_entry * e1 = s1->entry;
+        sym_entry * e2 = s2->entry;
 
-    quad * q = create_operation_quad(next_quad(), Q_OPERATION, op, temp, e1, e2);
-    return q;
+        quad * q = create_operation_quad(next_quad(), Q_OPERATION, op, ss->entry, e1, e2);
+        return q;
+    }
 }
+
+
 
 void gen_op_quad_list(node_attr * ss, node_attr * s1, node_attr * s2, instruction op) {
     quad * q = gen_op_quad(ss, s1, s2, op);
-    ss->next_list = merge(s1->next_list, s2->next_list);
-    ss->next_list = g_list_append(ss->next_list, q);
+    ss->quad_list = merge(ss->quad_list, s1->quad_list);
+    ss->quad_list = merge(ss->quad_list, s2->quad_list);
+    ss->quad_list = g_list_append(ss->quad_list, q);
+}
+
+// TODO: Check for previous quad list concatenation
+
+void gen_relop_quad_list(node_attr * ss, node_attr * s1, node_attr * s2, instruction ins) {
+    sym_entry * e1 = s1->entry;
+    sym_entry * e2 = s2->entry;
+
+    // next_quad + 1 ???
+
+    quad * q1 = create_procedure_quad(next_quad(), Q_JUMP, ins, e1, e2, 0);
+    quad * q2 = create_procedure_quad(next_quad(), Q_JUMP, JUMP, NULL, NULL, 0);
+
+    ss->true_list = g_list_append(ss->true_list, q1);
+    ss->false_list = g_list_append(ss->false_list, q2);
+
+    ss->quad_list = merge(ss->quad_list, s1->quad_list);
+    ss->quad_list = merge(ss->quad_list, s2->quad_list);
+
+    ss->quad_list = g_list_append(ss->quad_list, q1);
+    ss->quad_list = g_list_append(ss->quad_list, q2);
+}
+
+void gen_if_then_else_quad_list(node_attr * ss, node_attr * e, int m1, node_attr * s1, node_attr * n, int m2, node_attr * s2) {
+    
+    backpatch(e->true_list, m1);
+    backpatch(e->false_list, m2);
+    ss->next_list = merge(s1->next_list, n->next_list);
+    ss->next_list = merge(ss->next_list, s2->next_list);
+
+    ss->quad_list = merge(ss->quad_list, e->quad_list);
+    ss->quad_list = merge(ss->quad_list, s1->quad_list);
+    ss->quad_list = merge(ss->quad_list, n->quad_list);
+    ss->quad_list = merge(ss->quad_list, s2->quad_list);
 }

@@ -50,6 +50,7 @@ struct _quad {
 typedef struct _quad quad;
 
 int next_quad();
+int get_next_quad();
 
 quad * create_operation_quad (  int line,
                                 q_type type,

@@ -17,6 +17,10 @@ int next_quad() {
     return line;   
 }
 
+int get_next_quad() {
+    return nextQuad;
+}
+
 quad * create_operation_quad (int line, q_type type, instruction ins, sym_entry * dest, sym_entry * src1, sym_entry * src2) {
     quad * q = (quad *) malloc(sizeof(quad));
 
@@ -71,18 +75,37 @@ string ins_to_string(instruction ins){
 
 void print_quad(quad * q) {
     string instruction = ins_to_string(q->ins);
+    int line = q->line;
     switch(q->type) {
         case Q_CONST_INTEGER:
-            printf("%s %s %d _\n", instruction, q->f1.dest->identifier, q->f2.constant.ival);
+            printf("[%3d] %s %s %d _\n", line, instruction, q->f1.dest->identifier, q->f2.constant.ival);
             break;
         case Q_CONST_FLOAT:
-            printf("%s %s %f _\n", instruction, q->f1.dest->identifier, q->f2.constant.fval);
+            printf("[%3d] %s %s %f _\n", line, instruction, q->f1.dest->identifier, q->f2.constant.fval);
             break;
         case Q_OPERATION:
-            printf("%s %s %s %s\n", instruction, q->f1.dest->identifier, q->f2.src->identifier, q->f3.src->identifier);
+            switch (q->ins) {
+                case ASSIGN_TO:
+                    printf("[%3d] %s %s %s _\n", line, instruction, q->f1.dest->identifier, q->f2.src->identifier);
+                    break;
+                default:
+                    printf("[%3d] %s %s %s %s\n", line, instruction, q->f1.dest->identifier, q->f2.src->identifier, q->f3.src->identifier);
+            }
             break;
         case Q_JUMP:
-            printf("%s %s %s %d\n", instruction, q->f1.src->identifier, q->f2.src->identifier, q->f3.address);
+            switch(q->ins){
+                case JLT:
+                    printf("[%3d] %s %s %s [%3d]\n", line, instruction, q->f1.src->identifier, q->f2.src->identifier, q->f3.address);
+                    break;
+                case JE:
+                    printf("[%3d] %s %s %s [%3d]\n", line, instruction, q->f1.src->identifier, q->f2.src->identifier, q->f3.address);
+                    break;
+                case JUMP:
+                    printf("[%3d] %s _ _ [%3d]\n", line, instruction, q->f3.address);
+                    break;
+                default: 
+                    printf("[CRITICAL ERROR]: Unexpected instruction\n");
+            }
             break;
     }
 }

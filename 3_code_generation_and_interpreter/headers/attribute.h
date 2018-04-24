@@ -9,6 +9,8 @@ struct _node_attr {
     GList * false_list;
     GList * true_list;
     GList * next_list;
+    GList * quad_list;
+    int quad;
     string type;
 };
 

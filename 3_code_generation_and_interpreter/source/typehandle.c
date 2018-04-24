@@ -175,7 +175,7 @@ bool check_stmt_type(node_attr * ss, node_attr * s1, node_attr * s2) {
 }
 
 bool check_complex_stmt_type(node_attr * ss, node_attr * s1, node_attr * s2, node_attr * s3) {
-    
+
     if (check_integrity3(ss, s1, s2, s3) == false) {
         ss->type = _ERROR;
         return false;
@@ -198,12 +198,12 @@ bool check_complex_stmt_type(node_attr * ss, node_attr * s1, node_attr * s2, nod
 
 bool check_stmt_seq_type(node_attr * ss, node_attr * s1, node_attr * s2) {
 
-    if (check_integrity2(ss, s1, s2) == false){
+    if (check_integrity_stmt_seq(ss, s1, s2) == false){
         ss->type = _ERROR;
         return false;
     }
-
-    if (s1->type == _EMPTY && s2->type == _EMPTY){
+    
+    if (s2->type == _EMPTY){
         return true;
     } else {
         ss->type = _ERROR;
@@ -238,6 +238,7 @@ bool check_integrity2(node_attr * ss, node_attr * s1, node_attr * s2){
     }
 
     if (s1->type == _ERROR || s2->type == _ERROR){
+        //printf("[Error]: Nested error\n");
         return false;
     }
 
@@ -275,6 +276,30 @@ bool check_integrity3(node_attr * ss, node_attr * s1, node_attr * s2, node_attr 
     }
 
     if (s3->type == _ENTRY && s3->entry == NULL) {
+        printf("[CRITICAL ERROR: Null entry]\n");
+        return false;
+    }
+
+    return true;
+}
+
+bool check_integrity_stmt_seq(node_attr * ss, node_attr * s1, node_attr * s2){
+    if (ss == NULL || s1 == NULL || s2 == NULL){
+        printf("[CRITICAL ERROR: Null attribute]\n");
+        return false;
+    }
+
+    if (s2->type == _ERROR){
+        //printf("[Error]: Nested error\n");
+        return false;
+    }
+
+    if (s1->type == _ENTRY && s1->entry == NULL) {
+        printf("[CRITICAL ERROR: Null entry]\n");
+        return false;
+    }
+
+    if (s2->type == _ENTRY && s2->entry == NULL) {
         printf("[CRITICAL ERROR: Null entry]\n");
         return false;
     }
