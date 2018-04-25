@@ -20,5 +20,8 @@ void gen_op_quad_list(node_attr * ss, node_attr * s1, node_attr * s2, instructio
 quad * gen_jump_quad(node_attr * ss, node_attr * s1, node_attr * s2, instruction ins);
 void gen_relop_quad_list(node_attr * ss, node_attr * s1, node_attr * s2, instruction ins);
 void gen_if_then_else_quad_list(node_attr * ss, node_attr * e, int m1, node_attr * s1, node_attr * n, int m2, node_attr * s2);
+void gen_if_then_quad_list(node_attr * ss, node_attr * e, int m1, node_attr * s1);
+void gen_while_quad_list(node_attr * ss, int m1, node_attr * e, int m2, node_attr * s1);
+
 
 #endif

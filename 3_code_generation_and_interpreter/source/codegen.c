@@ -104,3 +104,22 @@ void gen_if_then_else_quad_list(node_attr * ss, node_attr * e, int m1, node_attr
     ss->quad_list = merge(ss->quad_list, n->quad_list);
     ss->quad_list = merge(ss->quad_list, s2->quad_list);
 }
+
+void gen_if_then_quad_list(node_attr * ss, node_attr * e, int m1, node_attr * s1) {
+    backpatch(e->true_list, m1);
+    ss->next_list = merge(e->false_list, s1->next_list);
+
+    ss->quad_list = merge(ss->quad_list, e->quad_list);
+    ss->quad_list = merge(ss->quad_list, s1->quad_list);
+}
+
+void gen_while_quad_list(node_attr * ss, int m1, node_attr * e, int m2, node_attr * s1) {
+    backpatch(e->true_list, m2);
+    ss->next_list = e->false_list;
+
+    quad * q = create_procedure_quad(next_quad(), Q_JUMP, JUMP, NULL, NULL, m1);
+    ss->quad_list = merge(ss->quad_list, e->quad_list);
+    ss->quad_list = merge(ss->quad_list, s1->quad_list);
+    ss->quad_list = g_list_append(ss->quad_list, q);
+    
+}

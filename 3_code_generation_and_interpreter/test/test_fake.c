@@ -1,4 +1,5 @@
 int k;
+int i;
 float martin;
 
 k := 4 * 5;
@@ -10,5 +11,11 @@ if (k<7) then {
 } else {
     martin := 0;
 }
+
+i := 0;
+while (i<5) do {
+    i := i + 1;
+}
+
 
 k:=8080;

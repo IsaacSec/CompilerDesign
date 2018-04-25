@@ -17,7 +17,7 @@ int h7;
   h3 := 10.0;
   i := 0;
 
-  while (1) do {
+  while (i<5.0) do {
     j:=i*10;
     i := i - 1;
   }

@@ -51,6 +51,7 @@ typedef struct _quad quad;
 
 int next_quad();
 int get_next_quad();
+void remove_quads(int toRemove);
 
 quad * create_operation_quad (  int line,
                                 q_type type,

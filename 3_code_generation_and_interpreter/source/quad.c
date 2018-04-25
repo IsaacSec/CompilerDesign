@@ -21,6 +21,10 @@ int get_next_quad() {
     return nextQuad;
 }
 
+void remove_quads(int toRemove) {
+    nextQuad -= toRemove;
+}
+
 quad * create_operation_quad (int line, q_type type, instruction ins, sym_entry * dest, sym_entry * src1, sym_entry * src2) {
     quad * q = (quad *) malloc(sizeof(quad));
 

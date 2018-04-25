@@ -84,8 +84,8 @@ program: var_dec stmt_seq   {
                                     printf ("No errors found\n");
                                 }
 
-                                //printf("----- Quad List -----\n");
-                                //print_quads($2->quad_list);
+                                printf("----- Quad List -----\n");
+                                print_quads($2->quad_list);
                             }
     ;
 
@@ -116,7 +116,7 @@ stmt_seq: stmt_seq m stmt         {
                                     //printf("------ stmt ----------\n");
                                     //print_quads($3->quad_list);
 
-                                    print_quads($3->quad_list);
+                                    //print_quads($3->quad_list);
 
                                     if (check_stmt_seq_type($$, $1, $3)){
                                         backpatch($1->next_list, $2->quad);  // Generates warnings: not a JUMP quad
@@ -144,13 +144,18 @@ stmt: IF exp THEN m stmt n stmt     {
     |   IF exp THEN m stmt                    {
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_stmt_type($$, $2, $5)) {
-                                                    // Continue
+                                                    gen_if_then_quad_list($$, $2, $4->quad, $5);
+                                                    
+                                                    //printf("IF THEN \n");
+                                                    //print_quads($$->quad_list);
                                                 }
                                             }
-    |   WHILE exp DO stmt                   {   
+    |   WHILE m exp DO m stmt                   {   
                                                 $$ = create_node_attr(_EMPTY);
-                                                if (check_stmt_type($$, $2, $4)) {
-                                                    // Continue
+                                                if (check_stmt_type($$, $3, $6)) {
+                                                    gen_while_quad_list($$, $2->quad, $3, $5->quad, $6);
+                                                    printf("WHILE DO \n");
+                                                    print_quads($$->quad_list);
                                                 }
                                             }
     |   variable ASSIGN exp SEMI            {   
