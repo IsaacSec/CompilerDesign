@@ -17,7 +17,8 @@ void backpatch_quad (gpointer data, gpointer user_data) {
     if (q->type == Q_JUMP) {
         q->f3.address = *newLine;
     } else {
-        printf ("[WARNING]: Backpatch in a not JUMP quad\n");
+        printf ("[WARNING]: Backpatch in a not JUMP quad: ");
+        print_quad(q);
     }
 }
 
@@ -71,8 +72,6 @@ void gen_op_quad_list(node_attr * ss, node_attr * s1, node_attr * s2, instructio
     ss->quad_list = g_list_append(ss->quad_list, q);
 }
 
-// TODO: Check for previous quad list concatenation
-
 void gen_relop_quad_list(node_attr * ss, node_attr * s1, node_attr * s2, instruction ins) {
     sym_entry * e1 = s1->entry;
     sym_entry * e2 = s2->entry;
@@ -96,7 +95,9 @@ void gen_if_then_else_quad_list(node_attr * ss, node_attr * e, int m1, node_attr
     
     backpatch(e->true_list, m1);
     backpatch(e->false_list, m2);
-    ss->next_list = merge(s1->next_list, n->next_list);
+    
+    ss->next_list = merge(ss->next_list, s1->next_list);
+    ss->next_list = merge(ss->next_list, n->next_list);
     ss->next_list = merge(ss->next_list, s2->next_list);
 
     ss->quad_list = merge(ss->quad_list, e->quad_list);
@@ -115,11 +116,26 @@ void gen_if_then_quad_list(node_attr * ss, node_attr * e, int m1, node_attr * s1
 
 void gen_while_quad_list(node_attr * ss, int m1, node_attr * e, int m2, node_attr * s1) {
     backpatch(e->true_list, m2);
-    ss->next_list = e->false_list;
+    ss->next_list = merge(ss->next_list, e->false_list);
 
     quad * q = create_procedure_quad(next_quad(), Q_JUMP, JUMP, NULL, NULL, m1);
     ss->quad_list = merge(ss->quad_list, e->quad_list);
     ss->quad_list = merge(ss->quad_list, s1->quad_list);
     ss->quad_list = g_list_append(ss->quad_list, q);
     
+}
+
+void remove_error_attr_lines(int numberOfAttr, ...){
+    int totalOfQuads = 0;
+    node_attr * attr = NULL;
+    
+    va_list ap;
+
+    va_start(ap, numberOfAttr); /* Requires the last fixed parameter (to get the address) */
+    for (int i = 0; i < numberOfAttr; i++) {
+        attr = va_arg(ap, node_attr *); /* Increments ap to the next argument. */
+        totalOfQuads += g_list_length(attr->quad_list);
+    }
+    va_end(ap);
+    remove_quads(totalOfQuads);
 }

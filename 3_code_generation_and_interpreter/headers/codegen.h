@@ -23,5 +23,6 @@ void gen_if_then_else_quad_list(node_attr * ss, node_attr * e, int m1, node_attr
 void gen_if_then_quad_list(node_attr * ss, node_attr * e, int m1, node_attr * s1);
 void gen_while_quad_list(node_attr * ss, int m1, node_attr * e, int m2, node_attr * s1);
 
+void remove_error_attr_lines(int numberOfAttr, ...);
 
 #endif

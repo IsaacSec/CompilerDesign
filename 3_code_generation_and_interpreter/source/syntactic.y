@@ -9,6 +9,7 @@
     
     int yylineno;
     char * yytext;
+    bool inheretedError = false;
     
     /* Function definitions */
     void yyerror (char *string);
@@ -77,14 +78,16 @@
 
 %%
 
-program: var_dec stmt_seq   {
-                                if ($1->type == _ERROR || $2->type == _ERROR){
+program: var_dec stmt_seq m {
+                                backpatch($2->next_list, $3->quad); 
+                                printf("\n");
+                                if ($1->type == _ERROR || $2->type == _ERROR || inheretedError){
                                     printf ("Semantic errors found\n");
                                 } else {
                                     printf ("No errors found\n");
                                 }
-
-                                printf("----- Quad List -----\n");
+                                
+                                printf("\n----- Quad List -----\n");
                                 print_quads($2->quad_list);
                             }
     ;
@@ -111,12 +114,6 @@ type: INTEGER   { $$ = _INT; }
 
 stmt_seq: stmt_seq m stmt         {
                                     $$ = create_node_attr(_EMPTY);
-                                    //printf("------ stmt_seq ------\n");
-                                    //print_quads($1->quad_list);
-                                    //printf("------ stmt ----------\n");
-                                    //print_quads($3->quad_list);
-
-                                    //print_quads($3->quad_list);
 
                                     if (check_stmt_seq_type($$, $1, $3)){
                                         backpatch($1->next_list, $2->quad);  // Generates warnings: not a JUMP quad
@@ -124,45 +121,45 @@ stmt_seq: stmt_seq m stmt         {
                                         $$->quad_list = merge($$->quad_list, $3->quad_list);
                                         $$->next_list = $3->next_list;
                                     } else {
+                                        inheretedError = true;
                                         $$->quad_list = $1->quad_list;
+                                        $$->next_list = $1->next_list;
                                     }
-
-                                    //printf("------ merge ------\n");
-                                    //print_quads($$->quad_list);
-                                    //printf("------ stmt_seq end ------\n\n");
                                     
                                 }
     |                           {   $$ = create_node_attr(_EMPTY); }
     ;
 
-stmt: IF exp THEN m stmt n stmt     {   
+stmt: IF exp THEN m stmt n stmt     {
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_complex_stmt_type($$, $2, $5, $7)) {
                                                     gen_if_then_else_quad_list($$, $2, $4->quad, $5, $6, $6->quad, $7);
+                                                } else {
+                                                    remove_error_attr_lines(3, $2, $5, $7);
                                                 }
                                             }
     |   IF exp THEN m stmt                    {
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_stmt_type($$, $2, $5)) {
                                                     gen_if_then_quad_list($$, $2, $4->quad, $5);
-                                                    
-                                                    //printf("IF THEN \n");
-                                                    //print_quads($$->quad_list);
+                                                } else {
+                                                    remove_error_attr_lines(2, $2, $5);
                                                 }
                                             }
     |   WHILE m exp DO m stmt                   {   
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_stmt_type($$, $3, $6)) {
                                                     gen_while_quad_list($$, $2->quad, $3, $5->quad, $6);
-                                                    printf("WHILE DO \n");
-                                                    print_quads($$->quad_list);
+                                                } else {
+                                                    remove_error_attr_lines(2, $3, $6);
                                                 }
                                             }
     |   variable ASSIGN exp SEMI            {   
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_assign_type($$, $1, $3)) {
                                                     gen_op_quad_list($$, $1, $3, ASSIGN_TO);
-                                                    //print_quads($$->quad_list);
+                                                } else {
+                                                    remove_error_attr_lines(2, $1, $3);
                                                 }
                                             }
     |   READ LPAREN variable RPAREN SEMI    {
@@ -194,8 +191,8 @@ n:  ELSE m          {
                         $$ = create_node_attr(_EMPTY);
                         quad * q = create_procedure_quad(next_quad(), Q_JUMP, JUMP, NULL, NULL, 0);
                         $$->quad = get_next_quad();
+                        $$->quad_list = new_list(q);
                         $$->next_list = new_list(q);
-                        $$->quad_list = $$->next_list;
                     }
     ;
 
@@ -203,14 +200,16 @@ exp: simple_exp LT simple_exp       {
                                         $$ = create_node_attr(_BOOL);
                                         if (check_relop_type($$, $1, $3)) {
                                             gen_relop_quad_list($$, $1, $3, JLT);
-                                            //print_quads($$->quad_list);
+                                        } else {
+                                            remove_error_attr_lines(2, $1, $3);
                                         }
                                     }
     |   simple_exp EQ simple_exp    {   
                                         $$ = create_node_attr(_BOOL);
                                         if (check_relop_type($$, $1, $3)) {
                                             gen_relop_quad_list($$, $1, $3, JE);
-                                            //print_quads($$->quad_list);
+                                        } else {
+                                            remove_error_attr_lines(2, $1, $3);
                                         }
                                     }
     |   simple_exp                  { $$ = $1; }
@@ -220,7 +219,8 @@ simple_exp: simple_exp PLUS term                {
                                                     $$ = create_node_attr(_ENTRY);
                                                     if (check_op_type($$, $1, $3)) {
                                                         gen_op_quad_list($$, $1, $3, ADDITION);
-                                                        //print_quads($$->quad_list);
+                                                    } else {
+                                                        remove_error_attr_lines(2, $1, $3);
                                                     }
                                                 }
     |   simple_exp MINUS term %prec UMINUS      {
@@ -228,7 +228,9 @@ simple_exp: simple_exp PLUS term                {
                                                     if (check_op_type($$, $1, $3)) {
                                                         gen_op_quad_list($$, $1, $3, SUBTRACTION);
                                                         //print_quads($$->quad_list);
-                                                    }        
+                                                    } else {
+                                                        remove_error_attr_lines(2, $1, $3);
+                                                    }      
                                                 }
     |   term                                    { $$ = $1; }    
     ;
@@ -238,13 +240,16 @@ term: term TIMES factor     {
                                 if (check_op_type($$, $1, $3)) {
                                     gen_op_quad_list($$, $1, $3, MULTIPLICATION);
                                     //print_quads($$->quad_list);
+                                } else {
+                                    remove_error_attr_lines(2, $1, $3);
                                 }
                             }
     |   term DIV factor     {   
                                 $$ = create_node_attr(_ENTRY);      
                                 if (check_op_type($$, $1, $3)) {
                                     gen_op_quad_list($$, $1, $3, DIVISION);
-                                    //print_quads($$->quad_list);
+                                } else {
+                                    remove_error_attr_lines(2, $1, $3);
                                 }
                             }    
     |   factor              { $$ = $1; }

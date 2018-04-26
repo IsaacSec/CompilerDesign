@@ -165,7 +165,7 @@ bool check_stmt_type(node_attr * ss, node_attr * s1, node_attr * s2) {
         return false;
     }
 
-    if (s1->type == _BOOL){
+    if (s1->type == _BOOL && s2->type == _EMPTY){
         return true;
     } else {
         ss->type = _ERROR;

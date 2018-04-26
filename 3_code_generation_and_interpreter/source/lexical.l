@@ -167,7 +167,7 @@
     }
 [0-9]*"."[0-9]+([eE][-+]?[0-9]+)?  { 
         
-        yylval.fval = atoi(yytext);
+        yylval.fval = atof(yytext);
         return FLOAT_NUM;
     }
 [0-9]+                     {
