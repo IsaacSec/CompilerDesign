@@ -149,11 +149,11 @@ bool check_write_type(node_attr * ss, node_attr * s1) {
 
     sym_entry * e = s1->entry;
 
-    if (e->type == _FLOAT || e->type == _INT || e->type == _BOOL) {
+    if (e->type == _FLOAT || e->type == _INT) {
         return true;
     } else {
         ss->type = _ERROR;
-        semantic_error("The expression must be an integer, a float or boolean type\n");
+        semantic_error("The expression must be an integer or a float type\n");
         return false;
     }
 }

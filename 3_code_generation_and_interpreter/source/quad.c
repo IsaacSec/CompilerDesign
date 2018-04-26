@@ -10,6 +10,8 @@ string S_JUMP = "jump";
 string S_JLT = "jlt";
 string S_JE = "je";
 string S_ASSIGN = ":=";
+string S_READ = "read";
+string S_WRITE = "write";
 
 int next_quad() {
     int line = nextQuad;
@@ -61,7 +63,18 @@ quad * create_constant_quad ( int line, q_type type, sym_entry * dest, v_value c
     q->f2.constant = constant;
 
     return q;
-} 
+}
+
+quad * create_function_quad ( int line, q_type type, instruction ins, sym_entry * src) {
+    quad * q = (quad *) malloc(sizeof(quad));
+
+    q->line = line;
+    q->type = type;
+    q->ins = ins;
+    q->f1.src = src;
+
+    return q;
+}
 
 string ins_to_string(instruction ins){
     switch(ins) {
@@ -73,6 +86,8 @@ string ins_to_string(instruction ins){
         case JLT: return S_JLT;
         case JE: return S_JE;
         case ASSIGN_TO: return S_ASSIGN;
+        case READ_VAR: return S_READ;
+        case WRITE_EXP: return S_WRITE;
         default: return _ERROR;
     }
 }
@@ -111,6 +126,17 @@ void print_quad(quad * q) {
                     printf("[CRITICAL ERROR]: Unexpected instruction\n");
             }
             break;
+        case Q_FUNCTION:
+            switch(q->ins) {
+                case READ_VAR:
+                    printf("[%3d] %s %s _ _\n", line, instruction, q->f1.src->identifier);
+                    break;
+                case WRITE_EXP:
+                    printf("[%3d] %s %s _ _\n", line, instruction, q->f1.src->identifier);
+                    break;
+                default:
+                    printf("[CRITICAL ERROR]: Unexpected instruction\n");
+            }
     }
 }
 

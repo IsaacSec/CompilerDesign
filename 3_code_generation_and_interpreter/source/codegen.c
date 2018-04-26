@@ -125,6 +125,19 @@ void gen_while_quad_list(node_attr * ss, int m1, node_attr * e, int m2, node_att
     
 }
 
+void gen_read_quad_list(node_attr * ss, node_attr * s1) {
+    sym_entry * var = s1->entry;
+    quad * q = create_function_quad(next_quad(), Q_FUNCTION, READ_VAR, var);
+    ss->quad_list = g_list_append(ss->quad_list, q);
+}
+
+void gen_write_quad_list(node_attr * ss, node_attr * s1) {
+    sym_entry * e = s1->entry;
+    quad * q = create_function_quad(next_quad(), Q_FUNCTION, WRITE_EXP, e);
+    ss->quad_list = merge(ss->quad_list, s1->quad_list);
+    ss->quad_list = g_list_append(ss->quad_list, q);
+}
+
 void remove_error_attr_lines(int numberOfAttr, ...){
     int totalOfQuads = 0;
     node_attr * attr = NULL;

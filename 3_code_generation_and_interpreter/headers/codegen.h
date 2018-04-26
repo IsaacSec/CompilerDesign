@@ -22,6 +22,8 @@ void gen_relop_quad_list(node_attr * ss, node_attr * s1, node_attr * s2, instruc
 void gen_if_then_else_quad_list(node_attr * ss, node_attr * e, int m1, node_attr * s1, node_attr * n, int m2, node_attr * s2);
 void gen_if_then_quad_list(node_attr * ss, node_attr * e, int m1, node_attr * s1);
 void gen_while_quad_list(node_attr * ss, int m1, node_attr * e, int m2, node_attr * s1);
+void gen_read_quad_list(node_attr * ss, node_attr * s1);
+void gen_write_quad_list(node_attr * ss, node_attr * s1);
 
 void remove_error_attr_lines(int numberOfAttr, ...);
 

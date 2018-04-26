@@ -165,13 +165,13 @@ stmt: IF exp THEN m stmt n stmt     {
     |   READ LPAREN variable RPAREN SEMI    {
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_read_type($$, $3)){
-                                                    // Continue
+                                                    gen_read_quad_list($$, $3);
                                                 }
                                             }
     |   WRITE LPAREN exp RPAREN SEMI        {
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_write_type($$, $3)){
-                                                    // Continue
+                                                    gen_write_quad_list($$, $3);
                                                 }
                                             }
     |   block                               { $$ = $1; }

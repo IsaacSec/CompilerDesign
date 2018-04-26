@@ -15,7 +15,9 @@ enum _instruction {
     JUMP,
     JLT,
     JE,
-    ASSIGN_TO
+    ASSIGN_TO,
+    READ_VAR,
+    WRITE_EXP
 };
 
 typedef enum _instruction instruction;
@@ -33,7 +35,8 @@ enum _q_type{
     Q_CONST_INTEGER,
     Q_CONST_FLOAT,
     Q_OPERATION,
-    Q_JUMP
+    Q_JUMP,
+    Q_FUNCTION
 };
 
 typedef enum _q_type q_type;
@@ -68,6 +71,11 @@ quad * create_procedure_quad (  int line,
                                 int address);
 
 quad * create_constant_quad ( int line, q_type type, sym_entry * dest, v_value constant, v_value zero );
+
+quad * create_function_quad (   int line,
+                                q_type type,
+                                instruction ins,
+                                sym_entry * src);
 
 string ins_to_string(instruction ins);
 void print_quad(quad * q);
