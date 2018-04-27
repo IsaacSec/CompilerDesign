@@ -6,6 +6,7 @@
     #include "../headers/attribute.h"
     #include "../headers/codegen.h"
     #include "../headers/quad.h"
+    #include "../headers/interpreter.h"
     
     int yylineno;
     char * yytext;
@@ -14,6 +15,8 @@
     /* Function definitions */
     void yyerror (char *string);
     
+    FILE *yyin;
+
     /* Supress Bison warning */
     int yylex();
 %}
@@ -53,7 +56,7 @@
 
 /* This solves the dangling else problem */
 %nonassoc THEN
-//%nonassoc ELSE
+%nonassoc ELSE
 
  /* To avoid ambiguities in the grammar assign associativity */
  /* and preference on the operators */
@@ -89,6 +92,9 @@ program: var_dec stmt_seq m {
                                 
                                 printf("\n----- Quad List -----\n");
                                 print_quads($2->quad_list);
+
+                                printf("\n---- Interpreter ----\n");
+                                interpreter($2->quad_list);
                             }
     ;
 
@@ -330,8 +336,10 @@ bool check_definition(node_attr * ss, string identifier, string type) {
 
 
 /* Bison does NOT define the main entry point so define it here */
-int main (){
+int main (int argc, char **argv){
     
+    
+
     printf("\n+----------------------------------+\n");
     printf("|  Lexical and Syntantic analyzer  |\n");
     printf("|      by { Martin and Isaac }     |\n");
@@ -343,8 +351,10 @@ int main (){
             key_equal_func,
             key_destroy_func,
             value_destroy_fun);
-
+    
+    yyin = fopen(argv[1], "r");
     yyparse();
+    fclose(yyin);
 
     print_hash_table(symtable);
     //g_hash_table_destroy(symtable);

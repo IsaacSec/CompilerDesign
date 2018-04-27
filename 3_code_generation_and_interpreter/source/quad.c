@@ -1,6 +1,6 @@
 #include "../headers/quad.h"
 
-int nextQuad = 1;
+int nextQuad = 0;
 
 string S_ADD = "+";
 string S_SUBTRACTION = "-";

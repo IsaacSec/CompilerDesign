@@ -4,7 +4,7 @@ CC=gcc
 FLEX=flex
 BISON=bison
 EXECUTABLE=analyzer.o
-SOURCES=syntactic.tab.c lex.yy.c table.c typehandle.c attribute.c quad.c codegen.c
+SOURCES=syntactic.tab.c lex.yy.c table.c typehandle.c attribute.c quad.c codegen.c interpreter.c
 BISON_FLAGS=-d -v
 #FLEX_FLAGS=
 CC_FLAGS=-DGRAMMAR -lfl -Wall
@@ -22,6 +22,6 @@ $(L_OUT): $(L_SRC) $(B_OUT)
 $(B_OUT): $(B_SRC) 
 	$(BISON) $(B_SRC) $(BISON_FLAGS)
 run: $(EXECUTABLE) $(INPUT_FILE)
-	./$(EXECUTABLE) < $(INPUT_FILE)
+	./$(EXECUTABLE) $(INPUT_FILE)
 clean:
 	rm $(TRASH_FILES)

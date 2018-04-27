@@ -41,6 +41,7 @@ quad * gen_temp_constant_quad(string type, v_value constant) {
         t = Q_CONST_FLOAT;
     }
 
+    temp->value = constant;
     quad * q = create_constant_quad(next_quad(), t, temp, constant, zero);
     return q;
 }
