@@ -1,22 +1,25 @@
-int k;
-int i;
-float martin;
+float f_speed;
+float i_speed;
+float distance;
+float time; 
+float acceleration; 
+int counter; 
 
-k := 4 * 5;
-martin := 0.5;
+counter := 0 ;
+acceleration := 2.0;
+i_speed := 0.0;
+time := 0.0;
 
+write(5+3);
+write(5/3);
+write(5.0/3);
+write(5*3);
+write(5-3.0);
 
-if (k<7) then {
-    martin := martin + 1;
-} else {
-    martin := 0;
-}
+while (time < 10) do{
+    time := time + 1;
+    f_speed := acceleration * time;
+    write (time);
+} 
 
-i := 0;
-while (i<5) do {
-    i := i + 1;
-    write(i);
-}
-
-
-k:=8080;
+write(f_speed) ;

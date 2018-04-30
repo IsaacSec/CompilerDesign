@@ -84,17 +84,17 @@
 program: var_dec stmt_seq m {
                                 backpatch($2->next_list, $3->quad); 
                                 printf("\n");
-                                if ($1->type == _ERROR || $2->type == _ERROR || inheretedError){
-                                    printf ("Semantic errors found\n");
-                                } else {
-                                    printf ("No errors found\n");
-                                }
-                                
+
                                 printf("\n----- Quad List -----\n");
                                 print_quads($2->quad_list);
 
-                                printf("\n---- Interpreter ----\n");
-                                interpreter($2->quad_list);
+                                if ($1->type == _ERROR || $2->type == _ERROR || inheretedError){
+                                    printf ("\nSemantic errors found\n");
+                                } else {
+                                    printf ("\nNo errors found\n");
+                                    printf("\n\n---- Interpreter ----\n");
+                                    interpreter($2->quad_list);
+                                }
                             }
     ;
 
@@ -360,13 +360,3 @@ int main (int argc, char **argv){
     //g_hash_table_destroy(symtable);
     return 0;
 }
-
-
-/*
-Dudas
-
-Todos son quads?
-Cómo representas read o write en un quad?
-Es necesario modificar la gŕamatica para el M.quad?
-
-*/

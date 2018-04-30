@@ -66,7 +66,7 @@ void print_hash_table (GHashTable * table){
             printf("|______________________________________________________|");
         } else {
             sym_entry * entry = (sym_entry*) value;
-            printf("| %7s | %10s | %14s |",(string)key, entry->identifier, entry->type);
+            printf("| %*.*s | %*.*s | %*.*s |",7,7,(string)key,10,10, entry->identifier,14,14, entry->type);
             
             if (entry->type == _INT) {
                 printf(" %12d |\n",entry->value.ival);

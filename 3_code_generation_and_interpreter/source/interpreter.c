@@ -30,17 +30,15 @@ void execute_program (int length, quad * quads[]) {
     }
 }
 
-v_value try_casting(sym_entry * dest, sym_entry * src) {
-    //v_value value = src->value;
+v_value try_casting(string dest_type, sym_entry * src) {
     v_value casted = src->value; 
 
-    if (dest->type != src->type) {
-        if (dest->type == _INT) {
-            int new = (int) src->value.fval;
-            casted.ival = new;
-        } else if (dest->type == _FLOAT) {
-            float new = (float) src->value.ival;
-            casted.fval = new;
+    if (dest_type != src->type) {
+
+        if (dest_type == _INT) {
+            casted.ival = (int) src->value.fval;
+        } else if (dest_type == _FLOAT) {
+            casted.fval = (float) src->value.ival;
         } else {
             printf("[CRITICAL ERROR]: Invalid value conversion\n");
         }
@@ -49,78 +47,106 @@ v_value try_casting(sym_entry * dest, sym_entry * src) {
     return casted;
 }
 
-void exec_sum(quad * q) {
-    sym_entry * dest = q->f1.dest;
-    sym_entry * src1 = q->f2.src;
-    sym_entry * src2 = q->f3.src;
+string get_dominant_type(string t1, string t2) {
+    string type = _ERROR;
 
-    v_value val1 = try_casting(dest, src1);
-    v_value val2 = try_casting(dest, src2);
-
-    if (dest->type == _INT) {
-        dest->value.ival = val1.ival + val2.ival;
-    } else if (dest->type == _FLOAT) {
-        dest->value.fval = val1.fval + val2.fval;
+    if (t1 != t2) {
+        if (t1 == _INT && t2 == _FLOAT) {
+            return _FLOAT;
+        } else if (t1 == _FLOAT && t2 == _INT) {
+            return _FLOAT;
+        } else {
+            printf("[CRITICAL ERROR]: Invalid value conversion\n");
+        }
     } else {
-        printf("[CRITICAL ERROR]: Unexpected type\n");
+        type = t1;
     }
 
-    next_line();
+    return type;
 }
 
-void exec_subs(quad * q) {
-    sym_entry * dest = q->f1.dest;
-    sym_entry * src1 = q->f2.src;
-    sym_entry * src2 = q->f3.src;
+v_value try_casting_relop(string type, sym_entry * src) {
+    v_value casted = src->value; 
 
-    v_value val1 = try_casting(dest, src1);
-    v_value val2 = try_casting(dest, src2);
+    if (type != src->type) {
 
-    if (dest->type == _INT) {
-        dest->value.ival = val1.ival - val2.ival;
-    } else if (dest->type == _FLOAT) {
-        dest->value.fval = val1.fval - val2.fval;
-    } else {
-        printf("[CRITICAL ERROR]: Unexpected type\n");
+        if (type == _INT) {
+            casted.ival = (int) src->value.fval;
+        } else if (type == _FLOAT) {
+            casted.fval = (float) src->value.ival;
+        } else {
+            printf("[CRITICAL ERROR]: Invalid value conversion (%s %s) into %s\n",src->type,src->identifier,type);
+        }
     }
 
-    next_line();
+    return casted;
 }
 
-void exec_mult(quad * q) {
-    sym_entry * dest = q->f1.dest;
-    sym_entry * src1 = q->f2.src;
-    sym_entry * src2 = q->f3.src;
+v_value sum (string type, v_value a, v_value b) {
+    v_value result = {.ival = 0};
 
-    v_value val1 = try_casting(dest, src1);
-    v_value val2 = try_casting(dest, src2);
-
-    if (dest->type == _INT) {
-        dest->value.ival = val1.ival * val2.ival;
-    } else if (dest->type == _FLOAT) {
-        dest->value.fval = val1.fval * val2.fval;
+    if (type == _INT) {
+        result.ival = a.ival + b.ival;
+    } else if (type == _FLOAT) {
+        result.fval = a.fval + b.fval;
     } else {
         printf("[CRITICAL ERROR]: Unexpected type\n");
     }
 
-    next_line();
+    return result;
 }
 
-void exec_div(quad * q) {
+v_value subs (string type, v_value a, v_value b) {
+    v_value result = {.ival = 0};
+
+    if (type == _INT) {
+        result.ival = a.ival - b.ival;
+    } else if (type == _FLOAT) {
+        result.fval = a.fval - b.fval;
+    } else {
+        printf("[CRITICAL ERROR]: Unexpected type\n");
+    }
+
+    return result;
+}
+
+v_value mult (string type, v_value a, v_value b) {
+    v_value result = {.ival = 0};
+
+    if (type == _INT) {
+        result.ival = a.ival * b.ival;
+    } else if (type == _FLOAT) {
+        result.fval = a.fval * b.fval;
+    } else {
+        printf("[CRITICAL ERROR]: Unexpected type\n");
+    }
+
+    return result;
+}
+
+v_value division (string type, v_value a, v_value b) {
+    v_value result = {.ival = 0};
+
+    if (type == _INT) {
+        result.ival = a.ival / b.ival;
+    } else if (type == _FLOAT) {
+        result.fval = a.fval / b.fval;
+    } else {
+        printf("[CRITICAL ERROR]: Unexpected type\n");
+    }
+
+    return result;
+}
+
+void exec_op (quad * q, v_value (*op)(string, v_value, v_value)) {
     sym_entry * dest = q->f1.dest;
     sym_entry * src1 = q->f2.src;
     sym_entry * src2 = q->f3.src;
 
-    v_value val1 = try_casting(dest, src1);
-    v_value val2 = try_casting(dest, src2);
+    v_value val1 = try_casting(dest->type, src1);
+    v_value val2 = try_casting(dest->type, src2);
 
-    if (dest->type == _INT) {
-        dest->value.ival = val1.ival / val2.ival;
-    } else if (dest->type == _FLOAT) {
-        dest->value.fval = val1.fval / val2.fval;
-    } else {
-        printf("[CRITICAL ERROR]: Unexpected type\n");
-    }
+    dest->value = op(dest->type, val1, val2);
 
     next_line();
 }
@@ -138,7 +164,7 @@ void exec_assign(quad * q) {
             break;
         case Q_OPERATION:
             src = q->f2.src;
-            v_value val1 = try_casting(dest, src);
+            v_value val1 = try_casting(dest->type, src);
 
             if (dest->type == _INT) {
                 dest->value.ival = val1.ival;
@@ -159,16 +185,17 @@ void exec_jlt(quad * q){
     sym_entry * src1 = q->f1.src;
     sym_entry * src2 = q->f2.src;
 
-    v_value val1 = src1->value;
-    v_value val2 = src2->value;
+    string type = get_dominant_type(src1->type, src2->type);
+    v_value val1 = try_casting_relop(type, src1);
+    v_value val2 = try_casting_relop(type, src2);
 
-    if (src1->type == _INT) {
+    if (type == _INT) {
         if (val1.ival < val2.ival) {
             goto_line(q->f3.address);
         } else {
             next_line();
         }
-    } else if (src1->type == _FLOAT) {
+    } else if (type == _FLOAT) {
         if (val1.fval < val2.fval) {
             goto_line(q->f3.address);
         } else {
@@ -183,16 +210,17 @@ void exec_je(quad * q){
     sym_entry * src1 = q->f1.src;
     sym_entry * src2 = q->f2.src;
 
-    v_value val1 = src1->value;
-    v_value val2 = src2->value;
+    string type = get_dominant_type(src1->type, src2->type);
+    v_value val1 = try_casting_relop(type, src1);
+    v_value val2 = try_casting_relop(type, src2);
 
-    if (src1->type == _INT) {
+    if (type == _INT) {
         if (val1.ival == val2.ival) {
             goto_line(q->f3.address);
         } else {
             next_line();
         }
-    } else if (src1->type == _FLOAT) {
+    } else if (type == _FLOAT) {
         if (val1.fval == val2.fval) {
             goto_line(q->f3.address);
         } else {
@@ -243,16 +271,16 @@ void execute_quad (quad * q) {
     //printf("Line: %d\n", program_index);
     switch(q->ins) {
         case ADDITION:
-            exec_sum(q);
+            exec_op(q, sum);
             break;
         case SUBTRACTION:
-            exec_subs(q);
+            exec_op(q, subs);
             break;
         case MULTIPLICATION:
-            exec_mult(q);
+            exec_op(q, mult);
             break;
         case DIVISION:
-            exec_div(q);
+            exec_op(q, division);
             break;
         case JUMP:
             exec_jump(q);
