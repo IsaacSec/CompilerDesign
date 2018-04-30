@@ -20,4 +20,6 @@ node_attr * create_node_attr(string type);
 
 void print_attr(node_attr * n);
 
+void free_attrs(int numberOfAttr, ...);
+
 #endif

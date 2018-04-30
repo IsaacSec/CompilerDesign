@@ -82,4 +82,6 @@ void print_quad(quad * q);
 void print_quad_in_list (gpointer data, gpointer user_data);
 void print_quads(GList * quads);
 
+void free_quad_list_full(GList * quad_list);
+
 #endif

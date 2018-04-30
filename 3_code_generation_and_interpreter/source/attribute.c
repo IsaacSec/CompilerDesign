@@ -17,3 +17,20 @@ void print_attr(node_attr * n){
     }
     printf("\n");
 }
+
+void free_attr(node_attr * attr){
+    free(attr);
+}
+
+void free_attrs(int numberOfAttr, ...){
+    node_attr * attr = NULL;
+    
+    va_list ap;
+
+    va_start(ap, numberOfAttr); /* Requires the last fixed parameter (to get the address) */
+    for (int i = 0; i < numberOfAttr; i++) {
+        attr = va_arg(ap, node_attr *); /* Increments ap to the next argument. */
+        free_attr(attr);
+    }
+    va_end(ap);
+}

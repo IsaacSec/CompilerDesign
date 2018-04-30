@@ -11,6 +11,11 @@ void goto_line(int line){
 }
 
 void interpreter (GList * quad_list) {
+
+    if (quad_list == NULL) {
+        return;
+    }
+
     int length = g_list_length(quad_list);
     quad * quads[length];
 
@@ -22,6 +27,7 @@ void interpreter (GList * quad_list) {
     } while ( (temp = temp->next) != NULL );
 
     execute_program(length, quads);
+    free_quad_list_full(quad_list);
 }
 
 void execute_program (int length, quad * quads[]) {

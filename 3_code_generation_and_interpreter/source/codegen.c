@@ -153,6 +153,7 @@ void remove_error_attr_lines(int numberOfAttr, ...){
         attr = va_arg(ap, node_attr *); /* Increments ap to the next argument. */
         print_quads(attr->quad_list);
         totalOfQuads += g_list_length(attr->quad_list);
+        free_quad_list_full(attr->quad_list);
     }
     va_end(ap);
     remove_quads(totalOfQuads);

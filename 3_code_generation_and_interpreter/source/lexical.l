@@ -56,8 +56,12 @@
         (*acum)++; 
         char * value = getSubstring(yytext, yyleng);
         char * type = key;
-        if (type == COMMENT) return;
+        if (type == COMMENT) {
+            free(value);
+            return;
+        }
         printf("[ %s ] ---> %s\n",value,type);
+        free(value);
     }
 
     /* Everytime an error is found, this function is executed */
@@ -66,6 +70,7 @@
         char * symbol = getSubstring(yytext,yyleng);
         int line = nlines + 1; /* The counter starts in 0, so we added 1 */
         printf("Symbol '%s' not recognized at line: %d\n",symbol,line);
+        free(symbol);
     }
 
     /* Counts the number of '\n' in a comment */
@@ -95,8 +100,10 @@
         char * value = getSubstring(yytext, yyleng);
         
         if (strcmp(value,"int") == 0){
+            free(value);
             return INTEGER;
         } else if (strcmp(value,"float") == 0){
+            free(value);
             return FLOAT;
         }
     }
@@ -104,14 +111,19 @@
         char * value = getSubstring(yytext, yyleng);
 
         if (strcmp(value,"if") == 0){
+            free(value);
             return IF;
         } else if (strcmp(value,"then") == 0){
+            free(value);
             return THEN;
         } else if (strcmp(value,"else") == 0){
+            free(value);
             return ELSE;
         } else if (strcmp(value,"while") == 0){
+            free(value);
             return WHILE;
         } else if (strcmp(value,"do") == 0){
+            free(value);
             return DO;
         } 
     }
@@ -119,17 +131,22 @@
         char * value = getSubstring(yytext, yyleng);
         
         if (strcmp(value,"read") == 0){
+            free(value);
             return READ;
         } else if (strcmp(value,"write") == 0){
+            free(value);
             return WRITE;
         }
      
      }
 "/*"((\*+[^/*])|([^*]))*\**"*/" { 
         /* Comments section*/
-        int plusline = findLineJumps(getSubstring(yytext,yyleng));
-        reFound(&commts, COMMENT); nlines += plusline;
-        yylineno += plusline; 
+        char * value = getSubstring(yytext,yyleng);
+        int plusline = findLineJumps(value);
+        reFound(&commts, COMMENT);
+        nlines += plusline;
+        yylineno += plusline;
+        free(value);
     }
 ":="                            { 
         return ASSIGN;
@@ -139,11 +156,11 @@
         char cval = *value;
 
         switch(cval){
-            case ';': return SEMI;
-            case '(': return LPAREN;
-            case ')': return RPAREN;
-            case '{': return LBRACE;
-            case '}': return RBRACE;
+            case ';': free(value); return SEMI;
+            case '(': free(value); return LPAREN;
+            case ')': free(value); return RPAREN;
+            case '{': free(value); return LBRACE;
+            case '}': free(value); return RBRACE;
         }
     }
 "<"|"="|"<="|">="|"!="          { 
@@ -151,18 +168,18 @@
         char cval = *value;
 
         switch(cval){
-            case '<': return LT;
-            case '=': return EQ;
+            case '<': free(value); return LT;
+            case '=': free(value); return EQ;
         }
     }
 "+"|"-"|"*"|"/"                 { 
         char * value = getSubstring(yytext, yyleng);
         char cval = *value;
         switch(cval){
-            case '+': return PLUS;
-            case '-': return MINUS;
-            case '*': return TIMES;
-            case '/': return DIV;
+            case '+': free(value); return PLUS;
+            case '-': free(value); return MINUS;
+            case '*': free(value); return TIMES;
+            case '/': free(value); return DIV;
         } 
     }
 [0-9]*"."[0-9]+([eE][-+]?[0-9]+)?  { 

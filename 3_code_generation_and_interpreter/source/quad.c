@@ -148,3 +148,12 @@ void print_quad_in_list (gpointer data, gpointer user_data) {
 void print_quads(GList * quads) {
     g_list_foreach(quads, print_quad_in_list, NULL);
 }
+
+void destroy_quad (gpointer data) {
+    quad * q = (quad *) data;
+    free(q);
+}
+
+void free_quad_list_full(GList * quad_list) {
+    g_list_free_full(quad_list, destroy_quad);
+}

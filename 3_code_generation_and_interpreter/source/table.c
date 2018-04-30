@@ -169,7 +169,7 @@ sym_entry *new_temp(string type) {
     } else {
         // Create a new symbol entry
         sym_entry * entry = (sym_entry *) malloc(sizeof(sym_entry));
-        entry->identifier = strdup(s);
+        entry->identifier = s;
         entry->type = type;
         if (type == _FLOAT) {
             entry->value.fval = 0.0;
@@ -178,9 +178,11 @@ sym_entry *new_temp(string type) {
         }
 
         // We duplicate s instead of using entry->identifier as a key to avoid double free
-        if (g_hash_table_insert(symtable, strdup(s), entry) == TRUE) {
+        string key = strdup(s);
+        if (g_hash_table_insert(symtable, key, entry) == TRUE) {
             return entry;
         } else {
+            free(key);
             return NULL;
         }
     }   

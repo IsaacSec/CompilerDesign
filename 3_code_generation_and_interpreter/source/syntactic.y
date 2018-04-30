@@ -98,11 +98,14 @@ program: var_dec stmt_seq m {
                                     printf("\n\n---- Interpreter ----\n");
                                     interpreter($2->quad_list);
                                 }
+
+                                free_attrs(3, $1, $2, $3);  
                             }
     ;
 
 var_dec: var_dec single_dec { 
-                                $$ = $2; 
+                                $$ = $2;
+                                free_attrs(1, $1);  
                             }
     |                       {   
                                 $$ = create_node_attr(_EMPTY);
@@ -114,6 +117,7 @@ single_dec: type ID SEMI    {
                                 if (check_definition($$, $2, $1)) {
                                     // Continue
                                 }
+                                free($2);
                             }      
     ;
 
@@ -134,6 +138,7 @@ stmt_seq: stmt_seq m stmt         {
                                         $$->quad_list = $1->quad_list;
                                         $$->next_list = $1->next_list;
                                     }
+                                    free_attrs(2, $1, $2);  
                                     
                                 }
     |                           {   $$ = create_node_attr(_EMPTY); }
@@ -146,6 +151,7 @@ stmt: IF exp THEN m stmt n stmt     {
                                                 } else {
                                                     remove_error_attr_lines(3, $2, $5, $7);
                                                 }
+                                                free_attrs(5, $2, $4, $5, $6, $7);  
                                             }
     |   IF exp THEN m stmt                    {
                                                 $$ = create_node_attr(_EMPTY);
@@ -154,6 +160,7 @@ stmt: IF exp THEN m stmt n stmt     {
                                                 } else {
                                                     remove_error_attr_lines(2, $2, $5);
                                                 }
+                                                free_attrs(3, $2, $4, $5);  
                                             }
     |   WHILE m exp DO m stmt                   {   
                                                 $$ = create_node_attr(_EMPTY);
@@ -162,6 +169,7 @@ stmt: IF exp THEN m stmt n stmt     {
                                                 } else {
                                                     remove_error_attr_lines(2, $3, $6);
                                                 }
+                                                free_attrs(4, $2, $3, $5, $6);  
                                             }
     |   variable ASSIGN exp SEMI            {   
                                                 $$ = create_node_attr(_EMPTY);
@@ -170,18 +178,21 @@ stmt: IF exp THEN m stmt n stmt     {
                                                 } else {
                                                     remove_error_attr_lines(2, $1, $3);
                                                 }
+                                                free_attrs(2, $1, $3);  
                                             }
     |   READ LPAREN variable RPAREN SEMI    {
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_read_type($$, $3)){
                                                     gen_read_quad_list($$, $3);
                                                 }
+                                                free_attrs(1, $3);  
                                             }
     |   WRITE LPAREN exp RPAREN SEMI        {
                                                 $$ = create_node_attr(_EMPTY);
                                                 if (check_write_type($$, $3)){
                                                     gen_write_quad_list($$, $3);
                                                 }
+                                                free_attrs(1, $3);  
                                             }
     |   block                               { $$ = $1; }
     ;
@@ -202,6 +213,7 @@ n:  ELSE m          {
                         $$->quad = get_next_quad();
                         $$->quad_list = new_list(q);
                         $$->next_list = new_list(q);
+                        free_attrs(1, $2); 
                     }
     ;
 
@@ -212,6 +224,7 @@ exp: simple_exp LT simple_exp       {
                                         } else {
                                             remove_error_attr_lines(2, $1, $3);
                                         }
+                                        free_attrs(2, $1, $3);  
                                     }
     |   simple_exp EQ simple_exp    {   
                                         $$ = create_node_attr(_BOOL);
@@ -220,6 +233,7 @@ exp: simple_exp LT simple_exp       {
                                         } else {
                                             remove_error_attr_lines(2, $1, $3);
                                         }
+                                        free_attrs(2, $1, $3);  
                                     }
     |   simple_exp                  { $$ = $1; }
     ;
@@ -231,6 +245,7 @@ simple_exp: simple_exp PLUS term                {
                                                     } else {
                                                         remove_error_attr_lines(2, $1, $3);
                                                     }
+                                                    free_attrs(2, $1, $3);
                                                 }
     |   simple_exp MINUS term %prec UMINUS      {
                                                     $$ = create_node_attr(_ENTRY); 
@@ -239,7 +254,8 @@ simple_exp: simple_exp PLUS term                {
                                                         //print_quads($$->quad_list);
                                                     } else {
                                                         remove_error_attr_lines(2, $1, $3);
-                                                    }      
+                                                    }
+                                                    free_attrs(2, $1, $3);      
                                                 }
     |   term                                    { $$ = $1; }    
     ;
@@ -252,6 +268,7 @@ term: term TIMES factor     {
                                 } else {
                                     remove_error_attr_lines(2, $1, $3);
                                 }
+                                free_attrs(2, $1, $3);  
                             }
     |   term DIV factor     {   
                                 $$ = create_node_attr(_ENTRY);      
@@ -260,6 +277,7 @@ term: term TIMES factor     {
                                 } else {
                                     remove_error_attr_lines(2, $1, $3);
                                 }
+                                free_attrs(2, $1, $3);  
                             }    
     |   factor              { $$ = $1; }
     ;
@@ -288,7 +306,8 @@ variable: ID    {
                     $$ = create_node_attr(_ENTRY);
                     if (check_variable($$, $1)) {
                         // Continue
-                    } 
+                    }
+                    free ($1);
                 }
     ;
 
@@ -360,6 +379,6 @@ int main (int argc, char **argv){
     fclose(yyin);
 
     print_hash_table(symtable);
-    //g_hash_table_destroy(symtable);
+    g_hash_table_destroy(symtable);
     return 0;
 }
