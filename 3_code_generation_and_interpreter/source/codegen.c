@@ -143,9 +143,9 @@ void remove_error_attr_lines(int numberOfAttr, ...){
     int totalOfQuads = 0;
     node_attr * attr = NULL;
     
-    printf("+------------------------------+\n");
-    printf("|        SUPRESSED CODE        |\n");
-    printf("+------------------------------+\n");
+    printf("+------------------------------------------------------+\n");
+    printf("|                    SUPRESSED CODE                    |\n");
+    printf("+------------------------------------------------------+\n");
     va_list ap;
 
     va_start(ap, numberOfAttr); /* Requires the last fixed parameter (to get the address) */
@@ -156,7 +156,5 @@ void remove_error_attr_lines(int numberOfAttr, ...){
     }
     va_end(ap);
     remove_quads(totalOfQuads);
-    printf("+------------------------------+\n");
-    printf("|              END             |\n");
-    printf("+------------------------------+\n");
+    printf("+------------------------------------------------------+\n\n");
 }

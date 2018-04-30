@@ -85,8 +85,11 @@ program: var_dec stmt_seq m {
                                 backpatch($2->next_list, $3->quad); 
                                 printf("\n");
 
-                                printf("\n----- Quad List -----\n");
+                                printf("+------------------------------------------------------+\n");
+                                printf("|                       QUAD LIST                      |\n");
+                                printf("+------------------------------------------------------+\n");
                                 print_quads($2->quad_list);
+                                printf("+------------------------------------------------------+\n");
 
                                 if ($1->type == _ERROR || $2->type == _ERROR || inheretedError){
                                     printf ("\nSemantic errors found\n");

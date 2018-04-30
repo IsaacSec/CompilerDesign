@@ -97,30 +97,30 @@ void print_quad(quad * q) {
     int line = q->line;
     switch(q->type) {
         case Q_CONST_INTEGER:
-            printf("[%3d] %s %s %d _\n", line, instruction, q->f1.dest->identifier, q->f2.constant.ival);
+            printf("|  [%3d] | %8s | %8s | %12d | ______ |\n", line, instruction, q->f1.dest->identifier, q->f2.constant.ival);
             break;
         case Q_CONST_FLOAT:
-            printf("[%3d] %s %s %f _\n", line, instruction, q->f1.dest->identifier, q->f2.constant.fval);
+            printf("|  [%3d] | %8s | %8s | %12.3f | ______ |\n", line, instruction, q->f1.dest->identifier, q->f2.constant.fval);
             break;
         case Q_OPERATION:
             switch (q->ins) {
                 case ASSIGN_TO:
-                    printf("[%3d] %s %s %s _\n", line, instruction, q->f1.dest->identifier, q->f2.src->identifier);
+                    printf("|  [%3d] | %8s | %8s | %12s | ______ |\n", line, instruction, q->f1.dest->identifier, q->f2.src->identifier);
                     break;
                 default:
-                    printf("[%3d] %s %s %s %s\n", line, instruction, q->f1.dest->identifier, q->f2.src->identifier, q->f3.src->identifier);
+                    printf("|  [%3d] | %8s | %8s | %12s | %6s |\n", line, instruction, q->f1.dest->identifier, q->f2.src->identifier, q->f3.src->identifier);
             }
             break;
         case Q_JUMP:
             switch(q->ins){
                 case JLT:
-                    printf("[%3d] %s %s %s [%3d]\n", line, instruction, q->f1.src->identifier, q->f2.src->identifier, q->f3.address);
+                    printf("|  [%3d] | %8s | %8s | %12s |  [%3d] |\n", line, instruction, q->f1.src->identifier, q->f2.src->identifier, q->f3.address);
                     break;
                 case JE:
-                    printf("[%3d] %s %s %s [%3d]\n", line, instruction, q->f1.src->identifier, q->f2.src->identifier, q->f3.address);
+                    printf("|  [%3d] | %8s | %8s | %12s |  [%3d] |\n", line, instruction, q->f1.src->identifier, q->f2.src->identifier, q->f3.address);
                     break;
                 case JUMP:
-                    printf("[%3d] %s _ _ [%3d]\n", line, instruction, q->f3.address);
+                    printf("|  [%3d] | %8s | ________ | ____________ |  [%3d] |\n", line, instruction, q->f3.address);
                     break;
                 default: 
                     printf("[CRITICAL ERROR]: Unexpected instruction\n");
@@ -129,10 +129,10 @@ void print_quad(quad * q) {
         case Q_FUNCTION:
             switch(q->ins) {
                 case READ_VAR:
-                    printf("[%3d] %s %s _ _\n", line, instruction, q->f1.src->identifier);
+                    printf("|  [%3d] | %8s | %8s | ____________ | ______ |\n", line, instruction, q->f1.src->identifier);
                     break;
                 case WRITE_EXP:
-                    printf("[%3d] %s %s _ _\n", line, instruction, q->f1.src->identifier);
+                    printf("|  [%3d] | %8s | %8s | ____________ | ______ |\n", line, instruction, q->f1.src->identifier);
                     break;
                 default:
                     printf("[CRITICAL ERROR]: Unexpected instruction\n");
