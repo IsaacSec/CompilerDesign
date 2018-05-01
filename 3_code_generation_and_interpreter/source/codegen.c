@@ -30,19 +30,18 @@ void backpatch (GList * list, int newLine) {
 
 quad * gen_temp_constant_quad(string type, v_value constant) {
     sym_entry * temp = new_temp(type);
-    v_value zero;
     q_type t;
 
     if (type == _INT){
-        zero.ival = 0;
         t = Q_CONST_INTEGER; 
     } else if (type == _FLOAT) {
-        zero.fval = 0.0;
         t = Q_CONST_FLOAT;
+    } else {
+        t = 99;
     }
 
     temp->value = constant;
-    quad * q = create_constant_quad(next_quad(), t, temp, constant, zero);
+    quad * q = create_constant_quad(next_quad(), t, temp, constant);
     return q;
 }
 

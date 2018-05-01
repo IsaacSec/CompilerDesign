@@ -70,7 +70,7 @@ quad * create_procedure_quad (  int line,
                                 sym_entry * src2,
                                 int address);
 
-quad * create_constant_quad ( int line, q_type type, sym_entry * dest, v_value constant, v_value zero );
+quad * create_constant_quad ( int line, q_type type, sym_entry * dest, v_value constant);
 
 quad * create_function_quad (   int line,
                                 q_type type,

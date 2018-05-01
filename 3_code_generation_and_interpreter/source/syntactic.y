@@ -98,7 +98,7 @@ program: var_dec stmt_seq m {
                                     printf ("\nWe cannot ensure that the code runs without failure...\n");
                                     printf("Do you want to run the quad list anyway? (Y/n)\n");
                                     scanf("%s", response);
-                                    if (strcmp(response, "Y") || strcmp(response, "yes") || strcmp(response, "Yes") || strcmp(response, "y")){
+                                    if (strcmp(response, "Y") == 0 || strcmp(response, "yes") == 0 || strcmp(response, "Yes") == 0 || strcmp(response, "y") == 0){
                                         interpreter($2->quad_list);
                                     } else {
                                         printf("[Analyzer finished\n]");

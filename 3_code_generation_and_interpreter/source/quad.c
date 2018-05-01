@@ -53,7 +53,7 @@ quad * create_procedure_quad (int line, q_type type, instruction ins, sym_entry 
     return q;
 }
 
-quad * create_constant_quad ( int line, q_type type, sym_entry * dest, v_value constant, v_value zero ) {
+quad * create_constant_quad ( int line, q_type type, sym_entry * dest, v_value constant) {
     quad * q = (quad *) malloc(sizeof(quad));
 
     q->line = line;
