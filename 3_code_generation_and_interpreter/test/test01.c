@@ -19,7 +19,7 @@ int h7;
   j := 2;
 
   while (j<5) do {
-    j := j - 1;
+    j := j + 1;
   }
 
   h := j/i;

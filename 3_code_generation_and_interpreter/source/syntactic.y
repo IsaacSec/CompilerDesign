@@ -93,6 +93,16 @@ program: var_dec stmt_seq m {
 
                                 if ($1->type == _ERROR || $2->type == _ERROR || inheretedError){
                                     printf ("\nSemantic errors found\n");
+                                    string response = (string) malloc(sizeof (char));
+                                    printf ("\nSome quads were supressed...\n");
+                                    printf ("\nWe cannot ensure that the code runs without failure...\n");
+                                    printf("Do you want to run the quad list anyway? (Y/n)\n");
+                                    scanf("%s", response);
+                                    if (strcmp(response, "Y") || strcmp(response, "yes") || strcmp(response, "Yes") || strcmp(response, "y")){
+                                        interpreter($2->quad_list);
+                                    } else {
+                                        printf("[Analyzer finished\n]");
+                                    }
                                 } else {
                                     printf ("\nNo errors found\n");
                                     printf("\n\n---- Interpreter ----\n");
