@@ -8,6 +8,10 @@ string _ERROR = "error";
 string _EMPTY = "empty";
 string _ENTRY = "entry";
 
+/* These functions returns true if there is no error in type checking
+* otherwise returns false
+*/
+
 bool check_op_type(node_attr * ss, node_attr * s1, node_attr * s2){
     
     sym_entry * entry;
@@ -212,7 +216,9 @@ bool check_stmt_seq_type(node_attr * ss, node_attr * s1, node_attr * s2) {
 }
 
 // --------------------------------------------------------------
-
+/* The check_integrity functions tries to identify the must common error sources
+ * such as Error types and NULL pointers
+ */
 bool check_integrity1(node_attr * ss, node_attr * s1){
     if (ss == NULL || s1 == NULL ){
         printf("[CRITICAL ERROR: Null attribute]\n");

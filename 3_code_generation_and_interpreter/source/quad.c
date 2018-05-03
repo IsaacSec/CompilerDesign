@@ -1,7 +1,9 @@
 #include "../headers/quad.h"
 
+// Current quad line to code generation
 int nextQuad = 0;
 
+// String values for instructions
 string S_ADD = "+";
 string S_SUBTRACTION = "-";
 string S_MULT = "*";
@@ -13,20 +15,24 @@ string S_ASSIGN = ":=";
 string S_READ = "read";
 string S_WRITE = "write";
 
+// Returns the current next_quad line and then increment it
 int next_quad() {
     int line = nextQuad;
     nextQuad ++;
     return line;   
 }
 
+// Returns the current next_quad
 int get_next_quad() {
     return nextQuad;
 }
 
+// Substract the number of lines removed
 void remove_quads(int toRemove) {
     nextQuad -= toRemove;
 }
 
+// SUM, SUBS, MULT, DIV, ASSIGMENT
 quad * create_operation_quad (int line, q_type type, instruction ins, sym_entry * dest, sym_entry * src1, sym_entry * src2) {
     quad * q = (quad *) malloc(sizeof(quad));
 
@@ -40,6 +46,7 @@ quad * create_operation_quad (int line, q_type type, instruction ins, sym_entry 
     return q;
 }
 
+// JUMP, JUMP EQUALS, JUMP LESS THAN
 quad * create_procedure_quad (int line, q_type type, instruction ins, sym_entry * src1, sym_entry * src2, int address) {
     quad * q = (quad *) malloc(sizeof(quad));
 
@@ -53,6 +60,7 @@ quad * create_procedure_quad (int line, q_type type, instruction ins, sym_entry 
     return q;
 }
 
+// Temporals to store constants
 quad * create_constant_quad ( int line, q_type type, sym_entry * dest, v_value constant) {
     quad * q = (quad *) malloc(sizeof(quad));
 
@@ -65,6 +73,7 @@ quad * create_constant_quad ( int line, q_type type, sym_entry * dest, v_value c
     return q;
 }
 
+// READ and WRITE
 quad * create_function_quad ( int line, q_type type, instruction ins, sym_entry * src) {
     quad * q = (quad *) malloc(sizeof(quad));
 
@@ -76,6 +85,7 @@ quad * create_function_quad ( int line, q_type type, instruction ins, sym_entry 
     return q;
 }
 
+// Returns the string value of and instruction
 string ins_to_string(instruction ins){
     switch(ins) {
         case ADDITION: return S_ADD;
@@ -92,6 +102,7 @@ string ins_to_string(instruction ins){
     }
 }
 
+// Prints into console the string value of a quad
 void print_quad(quad * q) {
     string instruction = ins_to_string(q->ins);
     int line = q->line;
@@ -145,6 +156,7 @@ void print_quad_in_list (gpointer data, gpointer user_data) {
     print_quad(q);
 }
 
+// Prints a list of quads 
 void print_quads(GList * quads) {
     g_list_foreach(quads, print_quad_in_list, NULL);
 }
@@ -154,6 +166,7 @@ void destroy_quad (gpointer data) {
     free(q);
 }
 
+// Frees the an entire list of quads
 void free_quad_list_full(GList * quad_list) {
     g_list_free_full(quad_list, destroy_quad);
 }

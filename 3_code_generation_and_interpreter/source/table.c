@@ -21,14 +21,10 @@ gboolean key_equal_func (gconstpointer a, gconstpointer b) {
     }
 }
 
-
-
-// Not tested beacause at this point we dont need to remove any item
 void key_destroy_func (gpointer data){
     free(data);
 }
 
-// Not tested beacause at this point we dont need to remove any item
 // Use this function only for entry_sym pointers stores in the symbol table
 void value_destroy_fun (gpointer data){
     

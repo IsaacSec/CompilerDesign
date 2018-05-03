@@ -10,7 +10,9 @@
     
     int yylineno;
     char * yytext;
-    bool inheretedError = false;
+
+    // Checking if an error was found
+    bool inheritedError = false;
     
     /* Function definitions */
     void yyerror (char *string);
@@ -79,6 +81,16 @@
 %type <attr> n
 %type <attr> m
 
+/*
+For most of the pruductions this are the steps to be followed
+    1) CREATE node_attr
+    2) Type Checking and Type conversion GOTO 3 if error GOTO 4 
+    3) Generate Quads GOTO 5
+    4) Suppress Code generated in previous productions
+    5) Free symbols in production
+*/
+
+
 %%
 
 program: var_dec stmt_seq m {
@@ -91,8 +103,8 @@ program: var_dec stmt_seq m {
                                 print_quads($2->quad_list);
                                 printf("+------------------------------------------------------+\n");
 
-                                if ($1->type == _ERROR || $2->type == _ERROR || inheretedError){
-                                    printf ("\nSemantic errors found\n");
+                                if ($1->type == _ERROR || $2->type == _ERROR || inheritedError){
+                                    printf ("\n[Semantic errors found]\n");
                                     string response = (string) malloc(sizeof (char));
                                     printf ("\nSome quads were supressed...\n");
                                     printf ("\nWe cannot ensure that the code runs without failure...\n");
@@ -104,7 +116,7 @@ program: var_dec stmt_seq m {
                                         printf("[Analyzer finished\n]");
                                     }
                                 } else {
-                                    printf ("\nNo errors found\n");
+                                    printf ("\n[No errors found]\n");
                                     printf("\n\n---- Interpreter ----\n");
                                     interpreter($2->quad_list);
                                 }
@@ -139,12 +151,12 @@ stmt_seq: stmt_seq m stmt         {
                                     $$ = create_node_attr(_EMPTY);
 
                                     if (check_stmt_seq_type($$, $1, $3)){
-                                        backpatch($1->next_list, $2->quad);  // Generates warnings: not a JUMP quad
+                                        backpatch($1->next_list, $2->quad);
                                         $$->quad_list = merge($$->quad_list, $1->quad_list);
                                         $$->quad_list = merge($$->quad_list, $3->quad_list);
                                         $$->next_list = $3->next_list;
                                     } else {
-                                        inheretedError = true;
+                                        inheritedError = true;
                                         $$->quad_list = $1->quad_list;
                                         $$->next_list = $1->next_list;
                                     }
@@ -261,7 +273,6 @@ simple_exp: simple_exp PLUS term                {
                                                     $$ = create_node_attr(_ENTRY); 
                                                     if (check_op_type($$, $1, $3)) {
                                                         gen_op_quad_list($$, $1, $3, SUBTRACTION);
-                                                        //print_quads($$->quad_list);
                                                     } else {
                                                         remove_error_attr_lines(2, $1, $3);
                                                     }
@@ -274,7 +285,6 @@ term: term TIMES factor     {
                                 $$ = create_node_attr(_ENTRY);
                                 if (check_op_type($$, $1, $3)) {
                                     gen_op_quad_list($$, $1, $3, MULTIPLICATION);
-                                    //print_quads($$->quad_list);
                                 } else {
                                     remove_error_attr_lines(2, $1, $3);
                                 }
@@ -337,6 +347,7 @@ void semantic_error(string message){
     printf("[Error]:   (line:%d): %s",yylineno,message);
 }
 
+// Verifies that a variable has been declared previously
 bool check_variable(node_attr * ss, string identifier) {
     sym_entry * entry = symlook(identifier);
 
@@ -351,6 +362,7 @@ bool check_variable(node_attr * ss, string identifier) {
     }
 }
 
+// Verifies that a variable has not been declared previously
 bool check_definition(node_attr * ss, string identifier, string type) {
     sym_entry * entry = symput(identifier);
 
@@ -377,15 +389,19 @@ int main (int argc, char **argv){
     printf("|      by { Martin and Isaac }     |\n");
     printf("+----------------------------------+\n\n");
 
-    // Just in case :D
     symtable = g_hash_table_new_full(
             hash_func,
             key_equal_func,
             key_destroy_func,
             value_destroy_fun);
     
+    // Open the file given in the arguments in mode "read"
     yyin = fopen(argv[1], "r");
+    
+    // Magic is done here!!!
     yyparse();
+
+    // Close file
     fclose(yyin);
 
     print_hash_table(symtable);

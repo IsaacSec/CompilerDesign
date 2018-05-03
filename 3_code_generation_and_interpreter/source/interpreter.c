@@ -2,14 +2,17 @@
 
 int program_index = 0;
 
+// Return the number of line in the next quad 
 void next_line() {
     program_index++;
 }
 
+// Change the number of the current line, for control flow
 void goto_line(int line){
     program_index = line;
 }
 
+// Executes the interpreter given a quad list
 void interpreter (GList * quad_list) {
 
     if (quad_list == NULL) {
@@ -21,21 +24,25 @@ void interpreter (GList * quad_list) {
 
     GList * temp = quad_list;
 
+    // The quad list is passed to an array to reduce access time to each quad
     do {
         quad * q = (quad *) temp->data;
         quads[q->line] = q;
     } while ( (temp = temp->next) != NULL );
 
+    // Execute quads
     execute_program(length, quads);
     free_quad_list_full(quad_list);
 }
 
+// Run the quad array based on the program index (this indicates the quad to be executed)
 void execute_program (int length, quad * quads[]) {
     while (program_index < length) {
         execute_quad(quads[program_index]);
     }
 }
 
+// Tries to cast the value of an entry based on dest type
 v_value try_casting(string dest_type, sym_entry * src) {
     v_value casted = src->value; 
 
@@ -53,6 +60,7 @@ v_value try_casting(string dest_type, sym_entry * src) {
     return casted;
 }
 
+// Returns the prefered type between two types
 string get_dominant_type(string t1, string t2) {
     string type = _ERROR;
 
@@ -71,23 +79,7 @@ string get_dominant_type(string t1, string t2) {
     return type;
 }
 
-v_value try_casting_relop(string type, sym_entry * src) {
-    v_value casted = src->value; 
-
-    if (type != src->type) {
-
-        if (type == _INT) {
-            casted.ival = (int) src->value.fval;
-        } else if (type == _FLOAT) {
-            casted.fval = (float) src->value.ival;
-        } else {
-            printf("[CRITICAL ERROR]: Invalid value conversion (%s %s) into %s\n",src->type,src->identifier,type);
-        }
-    }
-
-    return casted;
-}
-
+// Returns the sum between two values
 v_value sum (string type, v_value a, v_value b) {
     v_value result = {.ival = 0};
 
@@ -102,6 +94,7 @@ v_value sum (string type, v_value a, v_value b) {
     return result;
 }
 
+// Returns the substraction between two values
 v_value subs (string type, v_value a, v_value b) {
     v_value result = {.ival = 0};
 
@@ -116,6 +109,7 @@ v_value subs (string type, v_value a, v_value b) {
     return result;
 }
 
+// Returns the multiplication between two values
 v_value mult (string type, v_value a, v_value b) {
     v_value result = {.ival = 0};
 
@@ -130,6 +124,7 @@ v_value mult (string type, v_value a, v_value b) {
     return result;
 }
 
+// Returns the division between two values
 v_value division (string type, v_value a, v_value b) {
     v_value result = {.ival = 0};
 
@@ -144,6 +139,8 @@ v_value division (string type, v_value a, v_value b) {
     return result;
 }
 
+
+// Executes an operation quad (SUM, MULT, DIV, SUBS)
 void exec_op (quad * q, v_value (*op)(string, v_value, v_value)) {
     sym_entry * dest = q->f1.dest;
     sym_entry * src1 = q->f2.src;
@@ -157,6 +154,7 @@ void exec_op (quad * q, v_value (*op)(string, v_value, v_value)) {
     next_line();
 }
 
+// Executes an assignment quad (:=)
 void exec_assign(quad * q) {
     sym_entry * dest = q->f1.dest;
     sym_entry * src;
@@ -187,13 +185,15 @@ void exec_assign(quad * q) {
     next_line();
 }
 
+// Executes a JUMP LESS THAN quad
 void exec_jlt(quad * q){
     sym_entry * src1 = q->f1.src;
     sym_entry * src2 = q->f2.src;
 
     string type = get_dominant_type(src1->type, src2->type);
-    v_value val1 = try_casting_relop(type, src1);
-    v_value val2 = try_casting_relop(type, src2);
+    // Guarantees that the two value have the same type
+    v_value val1 = try_casting(type, src1);
+    v_value val2 = try_casting(type, src2);
 
     if (type == _INT) {
         if (val1.ival < val2.ival) {
@@ -212,13 +212,15 @@ void exec_jlt(quad * q){
     }
 }
 
+// Executes a JUMP EQUAL quad
 void exec_je(quad * q){
     sym_entry * src1 = q->f1.src;
     sym_entry * src2 = q->f2.src;
 
     string type = get_dominant_type(src1->type, src2->type);
-    v_value val1 = try_casting_relop(type, src1);
-    v_value val2 = try_casting_relop(type, src2);
+    // Guarantees that the two value have the same type
+    v_value val1 = try_casting(type, src1);
+    v_value val2 = try_casting(type, src2);
 
     if (type == _INT) {
         if (val1.ival == val2.ival) {
@@ -237,11 +239,12 @@ void exec_je(quad * q){
     }
 }
 
-
+// Executes a JUMP quad
 void exec_jump(quad * q){
     goto_line(q->f3.address);
 }
 
+// Executes a WRITE quad
 void exec_write(quad * q){
     sym_entry * src = q->f1.src;
     v_value val = src->value;
@@ -258,6 +261,7 @@ void exec_write(quad * q){
     next_line();
 }
 
+// Executes a READ quad
 void exec_read(quad * q){
     sym_entry * src = q->f1.src;
 
@@ -273,8 +277,8 @@ void exec_read(quad * q){
     next_line();
 }
 
+// Execute a quad depending on the instruction
 void execute_quad (quad * q) {
-    //printf("Line: %d\n", program_index);
     switch(q->ins) {
         case ADDITION:
             exec_op(q, sum);
